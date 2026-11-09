@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-import time
 import datetime
 import multiprocessing
 
@@ -17,13 +16,10 @@ PROCESSES_TO_SPAWN = multiprocessing.cpu_count()
 LOCK = multiprocessing.Lock()
 
 def main():
-    while True:
-        print("Performing main loop")
-        new_data = get_api_data()
-        update_cache(new_data)
-        backup_data()
-        # time.sleep(60 * 60)  # 1 hour
-        time.sleep(10)
+    print("Performing main loop")
+    new_data = get_api_data()
+    update_cache(new_data)
+    backup_data()
 
 def get_api_data():
     print("Getting API data")
@@ -40,21 +36,24 @@ def get_api_data():
 
 def update_cache(new_data):
     print("Updating cache")
-    update_time = new_data[LAST_UPDATE]
     print(f"{len(new_data) - len(IGNORE_KEYS)} items to update")
     data = load_cache()
-    for item_name, item_price in new_data.items():
 
-        if item_name in IGNORE_KEYS:
-            pass
-
-        if item_name not in data:
-            data[item_name] = {
-
-            }
-        data[item_name][update_time] = item_price
-
+    with multiprocessing.Manager() as mgr:
+        pool_data = mgr.dict(data)
+        with multiprocessing.Pool(PROCESSES_TO_SPAWN) as pool:
+            pool_data = mgr.dict(data)
+            pool.map(update_data, [({k:v}, pool_data, new_data[LAST_UPDATE]) for k,v in new_data.items()])
+        data = dict(pool_data)
     save_data(data)
+
+def update_data(new_data):
+    item_data = new_data[0]
+    old_data = new_data[1]
+    update_time = new_data[2]
+    for k,v in item_data.items():
+        old_data[k][update_time] = v
+
 
 def save_data(data):
     with open(DATA_STORE_FILE, "w") as f:
@@ -88,8 +87,6 @@ def backup_data():
         with open(backup_file_name, "w") as f:
             shutil.copy(DATA_STORE_FILE, backup_file_name)
         print("Cache Updated")
-
-
 
 if __name__ == "__main__":
     main()
