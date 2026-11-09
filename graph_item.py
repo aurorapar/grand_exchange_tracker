@@ -21,13 +21,16 @@ def main():
         for t in test:
             target_data.append(t)
 
+    # width = 3
+    # height = get_height_from_width(width)
     fig, axs = plt.subplots(len(target_data))
     fig.suptitle("Item Prices Over Time")
 
     for item_index, item_data in enumerate(target_data):
         item_name = list(item_data.keys())[0]
         time_stamps = [int(x) for x in item_data[item_name].keys()]
-        prices = list(map(int, item_data[item_name].values()))
+        time_stamps.sort()
+        prices = [int(item_data[item_name][str(t)]) for t in time_stamps]
 
 
         axs[item_index].set_title(f"{item_name}")
@@ -44,10 +47,12 @@ def main():
         xlabels = [datetime.datetime.strftime(x, "%Y%m%d\n%H:%M") for x in xlabels]
         # axs[item_index].xticks(time_stamps, xlabels)
         axs[item_index].tick_params("x", labelsize="small")
-        axs[item_index].set_xticklabels(xlabels)
+        axs[item_index].set_xticks(time_stamps, xlabels)
+        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right')
 
 
     # plt.margins(.02)
+    plt.tight_layout()
     plt.show()
 
 def load_cache():
@@ -60,6 +65,10 @@ def load_cache():
         exit()
 
     return data
+
+def get_height_from_width(width):
+    ratio = 6.4/4.8
+    return width / ratio
 
 if __name__ == "__main__":
     main()
