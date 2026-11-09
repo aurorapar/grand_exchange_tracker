@@ -62,7 +62,7 @@ def update_data(new_data):
 
 def save_data(data):
     with open(DATA_STORE_FILE, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=4, sort_keys=True)
 
 def load_cache():
     with LOCK:
