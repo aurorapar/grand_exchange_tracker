@@ -1,5 +1,4 @@
 import json
-import csv
 import os
 import shutil
 import time
@@ -76,7 +75,7 @@ def load_cache():
         backup_data()
         print("Creating new cache")
         data = {}
-        save_data()
+        save_data(data)
 
     return data
 
