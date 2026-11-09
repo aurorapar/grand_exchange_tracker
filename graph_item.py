@@ -16,7 +16,7 @@ def main():
     for target_item in target_items:
         test = [{k:v} for k,v in data.items() if k.lower() == target_item.lower()]
         if not test:
-            print("That item is not in the cache")
+            print(f"{target_item} is not in the cache")
             exit()
         for t in test:
             target_data.append(t)
