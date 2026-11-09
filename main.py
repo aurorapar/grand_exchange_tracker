@@ -36,22 +36,27 @@ def get_api_data():
 
 def update_cache(new_data):
     print("Updating cache")
-    print(f"{len(new_data) - len(IGNORE_KEYS)} items to update")
+    print(f"{len(new_data) - len(IGNORE_KEYS)} items in cache")
     data = load_cache()
 
     with multiprocessing.Manager() as mgr:
         pool_data = mgr.dict(data)
+        pool_counter = mgr.Value('i', 0)
         with multiprocessing.Pool(PROCESSES_TO_SPAWN) as pool:
             pool_data = mgr.dict(data)
-            pool.map(update_data, [({k:v}, pool_data, new_data[LAST_UPDATE]) for k,v in new_data.items()])
+            pool.map(update_data, [({k:v}, new_data[LAST_UPDATE], pool_data, pool_counter) for k,v in new_data.items()])
         data = dict(pool_data)
+    print("")
     save_data(data)
 
 def update_data(new_data):
     item_data = new_data[0]
-    old_data = new_data[1]
-    update_time = new_data[2]
+    update_time = new_data[1]
+    old_data = new_data[2]
+    counter = new_data[3]
     for k,v in item_data.items():
+        counter.value += 1
+        print(f"Items Updated: {counter.value}", end='\r')
         old_data[k][update_time] = v
 
 
