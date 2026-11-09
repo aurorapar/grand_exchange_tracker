@@ -34,11 +34,10 @@ def main():
         price_data = list(zip(time_stamps, prices))
         z_scores = []
 
-        for index, price_point in enumerate(price_data):
+        for index in range(len(price_data) + 1):
             if index < 2:
                 continue
             sub_prices = price_data[:index]
-
             time_stamp = sub_prices[-1][0]
             price = sub_prices[-1][1]
 
