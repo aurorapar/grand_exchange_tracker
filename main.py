@@ -60,21 +60,22 @@ def save_data(data):
         json.dump(data, f)
 
 def load_cache():
-    data = None
-    if not os.path.exists(DATA_STORE_FILE):
-        print("Creating new cache, doesn't exist")
-        data = {}
-        save_data(data)
-    try:
-        with open(DATA_STORE_FILE, "r") as f:
-            data = json.load(f)
-            print("Cache loaded")
-    except Exception as e:
-        print("Error loading cache:", e)
-        backup_data()
-        print("Creating new cache")
-        data = {}
-        save_data(data)
+    with LOCK:
+        data = None
+        if not os.path.exists(DATA_STORE_FILE):
+            print("Creating new cache, doesn't exist")
+            data = {}
+            save_data(data)
+        try:
+            with open(DATA_STORE_FILE, "r") as f:
+                data = json.load(f)
+                print("Cache loaded")
+        except Exception as e:
+            print("Error loading cache:", e)
+            backup_data()
+            print("Creating new cache")
+            data = {}
+            save_data(data)
 
     return data
 
