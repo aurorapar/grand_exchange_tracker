@@ -55,7 +55,7 @@ def main():
         times = [x[0] for x in z_scores]
         scores = [x[1] for x in z_scores]
 
-        axs[item_index].set_title(f"{item_name}")
+        axs[item_index].set_title(f"{item_name}", color=FEATURE_COLOR)
         axs[item_index].plot(times, scores,
                  marker='.',
                  linestyle='solid',

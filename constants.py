@@ -12,3 +12,9 @@ IGNORE_KEYS = [LAST_UPDATE, LAST_UPDATE2]
 PINK = (1,0,150/255)
 BLACK = (0,0,0)
 BLUE = 'tab:blue'
+
+ITEM_NAME = "item_name"
+ZSCORE = "zscore"
+ZSCORES = "zscores"
+ZSCORE_DEV = "zscore_deviation"
+TIMESTAMP = "timestamp"

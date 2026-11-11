@@ -1,66 +1,87 @@
 import datetime
 import json
 import statistics
+import traceback
 
 import matplotlib.pyplot as plt
 
+from constants import *
 from settings import *
 
 def main():
 
     data = load_cache()
-    target_items = TRACKED_ITEMS
+    highest_zscores = []
 
-    target_data = []
-    for target_item in target_items:
-        test = [{k:v} for k,v in data.items() if k.lower() == target_item.lower()]
-        if not test:
-            print(f"{target_item} is not in the cache")
-            exit()
-        for t in test:
-            target_data.append(t)
+    for item_name, item_data in data.items():
+        if item_name in IGNORE_KEYS:
+            continue
+        zscore = {
+            ITEM_NAME: item_name,
+            TIMESTAMP: [],
+            ZSCORES: [],
+            ZSCORE_DEV: None
+        }
 
-    fig, axs = plt.subplots(len(target_data))
+        item_scores = sorted([(int(t),int(s)) for t, s in item_data.items()], key=lambda x:x[0])
+        for index in range(len(item_scores) + 1):
+            if index < 2:
+                continue
+            sub_prices = [x[1] for x in item_scores][:index]
+            time_stamp = [x[0] for x in item_scores][:index][-1]
+            price = sub_prices[-1]
+
+            s = statistics.stdev(sub_prices)
+            if s == 0:
+                zscore[ZSCORES].append(s)
+            else:
+                m = statistics.mean(sub_prices)
+                zscore[ZSCORES].append((price - m) / s)
+            zscore[TIMESTAMP].append(time_stamp)
+
+        try:
+            zscore[ZSCORE_DEV] = statistics.stdev(zscore[ZSCORES])
+        except Exception as e:
+            print(f"Error trying to parse data for {item_name}, skipping")
+            print(f"\tValues: {zscore[TIMESTAMP]} {zscore[ZSCORES]}")
+            print(e)
+            continue
+
+        if len(highest_zscores) < NUMBER_OF_ZSCORES:
+            highest_zscores.append(zscore)
+            highest_zscores.sort(key=lambda x: x[ZSCORE_DEV])
+            continue
+
+        if zscore[ZSCORE_DEV] > highest_zscores[0][ZSCORE_DEV]:
+            highest_zscores[0] = zscore
+            highest_zscores.sort(key=lambda x: x[ZSCORE_DEV])
+
+    if not highest_zscores:
+        print("Not enough data to graph")
+        exit()
+
+    fig, axs = plt.subplots(len(highest_zscores))
     fig.suptitle("Z-Scores Over Time", color=FEATURE_COLOR)
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
 
-    for item_index, item_data in enumerate(target_data):
-        item_name = list(item_data.keys())[0]
-        time_stamps = [int(x) for x in item_data[item_name].keys()]
-        time_stamps.sort()
-        prices = [int(item_data[item_name][str(t)]) for t in time_stamps]
+    for item_index, item_data in enumerate(highest_zscores):
+        item_name = item_data[ITEM_NAME]
+        times = item_data[TIMESTAMP]
+        scores = item_data[ZSCORES]
 
-        price_data = list(zip(time_stamps, prices))
-        z_scores = []
-
-        for index in range(len(price_data) + 1):
-            if index < 2:
-                continue
-            sub_prices = price_data[:index]
-            time_stamp = sub_prices[-1][0]
-            price = sub_prices[-1][1]
-
-            s = statistics.stdev([x[1] for x in sub_prices])
-            if s == 0:
-                z_scores.append((time_stamp, s))
-            else:
-                m = statistics.mean([x[1] for x in sub_prices])
-                z_scores.append((time_stamp, (price - m) / s))
-
-        if not z_scores:
-            print("Not enough data to graph")
-            exit()
-
-        times = [x[0] for x in z_scores]
-        scores = [x[1] for x in z_scores]
-
-        axs[item_index].set_title(f"{item_name}")
-        axs[item_index].plot(times, scores,
-                 marker='.',
-                 linestyle='solid',
-                 color=LINE_COLOR
-                 )
+        axs[item_index].set_title(f"{item_name}", color=FEATURE_COLOR)
+        try:
+            axs[item_index].plot(times, scores,
+                     marker='.',
+                     linestyle='solid',
+                     color=LINE_COLOR
+                     )
+        except Exception as e:
+            print(e)
+            print(item_name)
+            print(times)
+            print(scores)
 
         axs[item_index].set_xlabel(f'Times', color=FEATURE_COLOR)
         axs[item_index].set_ylabel(f'Z-Scores', color=FEATURE_COLOR)
@@ -79,9 +100,9 @@ def main():
 
         plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=FEATURE_COLOR)
 
-        for score in z_scores:
-            axs[item_index].annotate(f"{score[1]:.2f}",
-                        xy=(score[0], score[1]), xycoords='data',
+        for score, timestamp in list(zip(scores, times)):
+            axs[item_index].annotate(f"{score:.2f}",
+                        xy=(timestamp, score), xycoords='data',
                         xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
 
         axs[item_index].set_facecolor(BACKGROUND_COLOR)
