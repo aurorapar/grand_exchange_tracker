@@ -55,10 +55,11 @@ def update_data(new_data):
     old_data = new_data[2]
     counter = new_data[3]
     for k,v in item_data.items():
+        if k not in old_data:
+            old_data[k] = {}
+        old_data[k][update_time] = v
         counter.value += 1
         print(f"Items Updated: {counter.value}", end='\r')
-        old_data[k][update_time] = v
-
 
 def save_data(data):
     with open(DATA_STORE_FILE, "w") as f:
