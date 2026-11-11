@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 
 DATA_STORE_FILE = "prices.json"
 DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), DATA_STORE_FILE)
+PINK = (1,0,150/255)
+BLACK = (0,0,0)
 
 def main():
 
@@ -23,7 +25,9 @@ def main():
             target_data.append(t)
 
     fig, axs = plt.subplots(len(target_data))
-    fig.suptitle("Z-Scores Over Time")
+    fig.suptitle("Z-Scores Over Time", color=PINK)
+    fig.set_facecolor(BLACK)
+    fig.set_edgecolor(PINK)
 
     for item_index, item_data in enumerate(target_data):
         item_name = list(item_data.keys())[0]
@@ -61,16 +65,23 @@ def main():
                  linestyle='solid'
                  )
 
-        axs[item_index].set_xlabel(f'Times')
-        axs[item_index].set_ylabel('Z-Scores')
+        axs[item_index].set_xlabel(f'Times', color=PINK)
+        axs[item_index].set_ylabel(f'Z-Scores', color=PINK)
 
         xlabels = times
         xlabels = [datetime.datetime.fromtimestamp(x) for x in xlabels]
         xlabels = [datetime.datetime.strftime(x, "%Y%m%d\n%H:%M") for x in xlabels]
 
-        axs[item_index].tick_params("x", labelsize="small")
-        axs[item_index].set_xticks(times, xlabels)
-        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right')
+        #axs[item_index].tick_params("y", color=PINK)
+        axs[item_index].set_xticks(times, xlabels, color=PINK)
+        axs[item_index].tick_params(which="both", labelsize="small", color=PINK)
+
+        #axs[item_index].set_yticks(scores, scores, color=PINK)
+        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=PINK)
+
+        axs[item_index].set_facecolor(BLACK)
+        for spine in axs[item_index].spines.values():
+            spine.set_edgecolor(PINK)
 
     plt.tight_layout()
     plt.show()
