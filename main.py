@@ -1,18 +1,12 @@
 import json
-import os
 import shutil
 import datetime
-import multiprocessing
 
 import requests
 
-LAST_UPDATE = "%LAST_UPDATE%"
-LAST_UPDATE2 = "%LAST_UPDATE_F%"
-IGNORE_KEYS = [LAST_UPDATE, LAST_UPDATE2]
-DATA_STORE_FILE = "prices.json"
-DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), DATA_STORE_FILE)
-PRICES = "prices"
-PROCESSES_TO_SPAWN = multiprocessing.cpu_count()
+from constants import *
+from settings import *
+
 LOCK = multiprocessing.Lock()
 
 def main():

@@ -1,19 +1,15 @@
 import datetime
 import json
-import os
 import statistics
 
 import matplotlib.pyplot as plt
 
-DATA_STORE_FILE = "prices.json"
-DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), DATA_STORE_FILE)
-PINK = (1,0,150/255)
-BLACK = (0,0,0)
+from settings import *
 
 def main():
 
     data = load_cache()
-    target_items = ["3rd Age druidic cloak", "Accursed sceptre (au)"]
+    target_items = TRACKED_ITEMS
 
     target_data = []
     for target_item in target_items:
@@ -25,9 +21,9 @@ def main():
             target_data.append(t)
 
     fig, axs = plt.subplots(len(target_data))
-    fig.suptitle("Z-Scores Over Time", color=PINK)
-    fig.set_facecolor(BLACK)
-    fig.set_edgecolor(PINK)
+    fig.suptitle("Z-Scores Over Time", color=FEATURE_COLOR)
+    fig.set_facecolor(BACKGROUND_COLOR)
+    fig.set_edgecolor(FEATURE_COLOR)
 
     for item_index, item_data in enumerate(target_data):
         item_name = list(item_data.keys())[0]
@@ -62,26 +58,35 @@ def main():
         axs[item_index].set_title(f"{item_name}")
         axs[item_index].plot(times, scores,
                  marker='.',
-                 linestyle='solid'
+                 linestyle='solid',
+                 color=LINE_COLOR
                  )
 
-        axs[item_index].set_xlabel(f'Times', color=PINK)
-        axs[item_index].set_ylabel(f'Z-Scores', color=PINK)
+        axs[item_index].set_xlabel(f'Times', color=FEATURE_COLOR)
+        axs[item_index].set_ylabel(f'Z-Scores', color=FEATURE_COLOR)
 
-        xlabels = times
-        xlabels = [datetime.datetime.fromtimestamp(x) for x in xlabels]
-        xlabels = [datetime.datetime.strftime(x, "%Y%m%d\n%H:%M") for x in xlabels]
+        x_ticks = [int(x) for x in axs[item_index].get_xticks()]
+        x_dates = [datetime.datetime.fromtimestamp(x) for x in x_ticks]
+        x_labels = [datetime.datetime.strftime(x, "%Y%m%d\n%H:%M") for x in x_dates]
 
-        #axs[item_index].tick_params("y", color=PINK)
-        axs[item_index].set_xticks(times, xlabels, color=PINK)
-        axs[item_index].tick_params(which="both", labelsize="small", color=PINK)
+        axs[item_index].set_xticks(x_ticks, x_labels, color=FEATURE_COLOR)
 
-        #axs[item_index].set_yticks(scores, scores, color=PINK)
-        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=PINK)
+        y_ticks = axs[item_index].get_yticks()
+        y_labels = [f"{y:.2f}" for y in y_ticks]
+        axs[item_index].set_yticks(y_ticks, y_labels, color=FEATURE_COLOR)
 
-        axs[item_index].set_facecolor(BLACK)
+        axs[item_index].tick_params(which="both", labelsize="small", color=FEATURE_COLOR)
+
+        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=FEATURE_COLOR)
+
+        for score in z_scores:
+            axs[item_index].annotate(f"{score[1]:.2f}",
+                        xy=(score[0], score[1]), xycoords='data',
+                        xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
+
+        axs[item_index].set_facecolor(BACKGROUND_COLOR)
         for spine in axs[item_index].spines.values():
-            spine.set_edgecolor(PINK)
+            spine.set_edgecolor(FEATURE_COLOR)
 
     plt.tight_layout()
     plt.show()
