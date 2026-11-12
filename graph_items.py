@@ -15,15 +15,13 @@ def graph_items(
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
 
-    for items_index, items_data in enumerate(items_to_graph):
+    for items_index, item_data in enumerate(items_to_graph):
         item_name = item_names[items_index]
-        item_data = items_data[items_index]
 
-        x_values = [x[0] for x in item_data]
-        x_labels = [x[1] for x in item_data]
-
-        y_values = [x[2] for x in item_data]
-        y_labels = [x[3] for x in item_data]
+        x_values = item_data[0]
+        x_labels = item_data[1]
+        y_values = item_data[2]
+        y_labels = item_data[3]
 
         axs[items_index].set_title(f"{item_name}", color=FEATURE_COLOR)
         axs[items_index].plot(x_values, y_values,
@@ -42,9 +40,9 @@ def graph_items(
 
         plt.setp(axs[items_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=FEATURE_COLOR)
 
-        for score in item_data:
-            axs[items_index].annotate(f"{score[2]:.2f}",
-                        xy=(score[0], score[2]), xycoords='data',
+        for score in list(zip(item_data[0], item_data[2])):
+            axs[items_index].annotate(f"{score[1]:.2f}",
+                        xy=(score[0], score[1]), xycoords='data',
                         xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
 
         axs[items_index].set_facecolor(BACKGROUND_COLOR)

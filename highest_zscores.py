@@ -1,11 +1,9 @@
 import datetime
 import json
 import statistics
-import traceback
 
 import matplotlib.pyplot as plt
 
-from constants import *
 from settings import *
 
 def main():

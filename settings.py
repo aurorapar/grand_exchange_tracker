@@ -4,7 +4,7 @@ from constants import *
 
 PROCESSES_TO_SPAWN = multiprocessing.cpu_count()
 
-TRACKED_ITEMS = ["3rd Age druidic cloak", "Accursed sceptre (au)"]
+TRACKED_ITEMS = ["Black set (lg)", "Black salamander"]
 
 NUMBER_OF_ZSCORES = 4
 
