@@ -1,0 +1,143 @@
+import datetime
+import traceback
+from datetime import tzinfo
+
+from sqlalchemy import select, update, func
+from sqlalchemy.orm import Session
+
+from database.database import Session as GeSession, engine
+from database.database import ItemData
+from database.item_operations import get_item_data as get_all_items
+
+from constants import ITEM_ID, ITEM_NAME, TIMESTAMP, PRICE, VOLUME
+
+def add_merged_data(merged_data):
+    all_items = get_all_items(expire_data=False)
+    for item_name, item_data in merged_data.items():
+        for timestamp, item_values in item_data.items():
+            item_id = [item.id for item in all_items if item.name == item_name][0]
+            item_values[ITEM_NAME] = item_name
+            item_values[ITEM_ID] = item_id
+            item_values[TIMESTAMP] = timestamp
+            for d in [PRICE, VOLUME]:
+                if d not in item_values:
+                    item_values[d] = None
+
+def add_latest_item_data(latest_item_data):
+    item_id = latest_item_data[ITEM_ID]
+
+    timestamp = latest_item_data[TIMESTAMP]
+    if not isinstance(timestamp, datetime.datetime):
+        try:
+            timestamp = datetime.datetime.fromisoformat(timestamp)
+        except:
+            timestamp = datetime.datetime.fromtimestamp(timestamp)
+
+    price = latest_item_data[PRICE]
+
+    volume = latest_item_data[VOLUME]
+
+    last_update = get_last_item_data_update()
+    if not timestamp.replace(tzinfo=datetime.timezone.utc) > last_update.replace(tzinfo=datetime.timezone.utc):
+        return
+
+    try:
+        item = get_item_data(item_id, timestamp, expire_data=False)
+        if item:
+            update_latest_item_data(item, latest_item_data)
+            return
+
+        with GeSession.begin() as session:
+            session.add(
+                ItemData(
+                    runescape_item_id=item_id,
+                    timestamp=timestamp,
+                    price=price,
+                    volume=volume
+                )
+            )
+
+    except Exception as e:
+        if "UNIQUE constraint failed" in traceback.format_exc():
+            # print(f"Skipped adding item to database (already exists):\n\t{item_id}:{item_name}")
+            return
+
+        traceback.print_exc()
+        print(f"Failed to add item to database:\n\t{item_id} at {timestamp}")
+
+
+def get_item_data(item_id, timestamp, expire_data=True):
+    with Session(engine, expire_on_commit=expire_data) as session:
+        stmt = select(ItemData).where(ItemData.runescape_item_id == item_id, ItemData.timestamp == timestamp)
+        results = session.scalars(stmt).first()
+        return results
+
+def update_latest_item_data(item_data, latest_item_data):
+    item_id = int(latest_item_data[ITEM_ID])
+
+    timestamp = latest_item_data[TIMESTAMP]
+    timestamp = datetime.datetime.fromisoformat(timestamp)
+
+    price = latest_item_data[PRICE]
+
+    volume = latest_item_data[VOLUME]
+
+    try:
+
+        with GeSession.begin() as session:
+            session.execute(update(ItemData),
+                [
+                    {ITEM_ID: item_data.id, PRICE: price, VOLUME: volume}
+                ],
+            )
+
+    except Exception as e:
+            traceback.print_exc()
+            print(f"Couldn't update Item ID {item_id} at {timestamp}")
+
+def get_last_item_data_update(expire_data=False):
+    with (Session(engine, expire_on_commit=expire_data) as session):
+        latest_update = session.execute(func.max(ItemData.timestamp)).first()[0] or datetime.datetime.min
+        return latest_update
+
+
+def add_item_history(item_history):
+    item_id = item_history[ITEM_ID]
+
+    timestamp = item_history[TIMESTAMP]
+    if not isinstance(timestamp, datetime.datetime):
+        try:
+            timestamp = datetime.datetime.fromisoformat(timestamp)
+        except:
+            timestamp = datetime.datetime.fromtimestamp(timestamp)
+
+    price = item_history[PRICE]
+    volume = item_history[VOLUME]
+    item_stored_data = get_item_data(item_id, timestamp, expire_data=False)
+    if item_stored_data:
+        if item_stored_data.price == price and item_stored_data.volume == volume:
+            return
+
+    try:
+        item = get_item_data(item_id, timestamp, expire_data=False)
+        if item:
+            update_latest_item_data(item, item_history)
+            return
+
+        with GeSession.begin() as session:
+            session.add(
+                ItemData(
+                    runescape_item_id=item_id,
+                    timestamp=timestamp,
+                    price=price,
+                    volume=volume
+                )
+            )
+
+    except Exception as e:
+        if "UNIQUE constraint failed" in traceback.format_exc():
+            # print(f"Skipped adding item to database (already exists):\n\t{item_id}:{item_name}")
+            return
+
+        traceback.print_exc()
+        print(f"Failed to add item to database:\n\t{item_id} at {timestamp}")

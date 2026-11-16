@@ -1,8 +1,22 @@
 import os
 import multiprocessing
 
-DATA_STORE_FILE = "prices.json"
-DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), DATA_STORE_FILE)
+PRICE_DATA_STORE_FILE = "json_data/prices.json"
+PRICE_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), PRICE_DATA_STORE_FILE)
+
+ALL_PRICE_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), "json_data/all_prices.json")
+
+VOLUME_DATA_STORE_FILE = "json_data/volume.json"
+VOLUME_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), VOLUME_DATA_STORE_FILE)
+
+MAPPING_DATA_STORE_FILE = "json_data/mappings.json"
+MAPPING_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), MAPPING_DATA_STORE_FILE)
+
+BACKUP_DATA_STORE_FILE = f"json_data/data_backup_{0}.{1}"
+BACKUP_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), BACKUP_DATA_STORE_FILE)
+
+DATABASE_FILE = "database/database.sqlite"
+DATABASE_FILE = os.path.join(os.path.dirname(__file__), DATABASE_FILE)
 
 PRICES = "prices"
 LAST_UPDATE = "%LAST_UPDATE%"
@@ -13,8 +27,16 @@ PINK = (1,0,150/255)
 BLACK = (0,0,0)
 BLUE = 'tab:blue'
 
-ITEM_NAME = "item_name"
+ITEM_NAME = "name"
 ZSCORE = "zscore"
 ZSCORES = "zscores"
 ZSCORE_DEV = "zscore_deviation"
 TIMESTAMP = "timestamp"
+ITEM_ID = "id"
+AVG_HIGH = "avgHighPrice"
+AVG_LOW = "avgLowPrice"
+HIGH_PRICE_VOLUME = "highPriceVolume"
+LOW_PRICE_VOLUME = "lowPriceVolume"
+DAILY_AVG = "dailyAvg"
+PRICE = "price"
+VOLUME = "volume"

@@ -3,6 +3,7 @@ import multiprocessing
 from constants import *
 
 PROCESSES_TO_SPAWN = multiprocessing.cpu_count()
+THREAD_COUNT = 10
 
 TRACKED_ITEMS = ["Black set (lg)", "Black salamander"]
 
