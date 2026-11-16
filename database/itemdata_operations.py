@@ -1,18 +1,17 @@
 import datetime
 import traceback
-from datetime import tzinfo
 
 from sqlalchemy import select, update, func
 from sqlalchemy.orm import Session
 
 from database.database import Session as GeSession, engine
 from database.database import ItemData
-from database.item_operations import get_item_data as get_all_items
+from database.item_operations import get_item
 
 from constants import ITEM_ID, ITEM_NAME, TIMESTAMP, PRICE, VOLUME
 
 def add_merged_data(merged_data):
-    all_items = get_all_items(expire_data=False)
+    all_items = get_item(expire_data=False)
     for item_name, item_data in merged_data.items():
         for timestamp, item_values in item_data.items():
             item_id = [item.id for item in all_items if item.name == item_name][0]
@@ -72,6 +71,12 @@ def get_item_data(item_id, timestamp, expire_data=True):
         results = session.scalars(stmt).first()
         return results
 
+def get_data_for_item(item_id, expire_data=True):
+    with Session(engine, expire_on_commit=expire_data) as session:
+        stmt = select(ItemData).where(ItemData.runescape_item_id == item_id)
+        results = session.scalars(stmt).all()
+        return results
+
 def update_latest_item_data(item_data, latest_item_data):
     item_id = int(latest_item_data[ITEM_ID])
 
@@ -101,38 +106,21 @@ def get_last_item_data_update(expire_data=False):
         return latest_update
 
 
-def add_item_history(item_history):
-    item_id = item_history[ITEM_ID]
-
-    timestamp = item_history[TIMESTAMP]
-    if not isinstance(timestamp, datetime.datetime):
-        try:
-            timestamp = datetime.datetime.fromisoformat(timestamp)
-        except:
-            timestamp = datetime.datetime.fromtimestamp(timestamp)
-
-    price = item_history[PRICE]
-    volume = item_history[VOLUME]
-    item_stored_data = get_item_data(item_id, timestamp, expire_data=False)
-    if item_stored_data:
-        if item_stored_data.price == price and item_stored_data.volume == volume:
-            return
-
+def add_item_history(item_id, item_history):
     try:
-        item = get_item_data(item_id, timestamp, expire_data=False)
-        if item:
-            update_latest_item_data(item, item_history)
-            return
-
         with GeSession.begin() as session:
-            session.add(
-                ItemData(
-                    runescape_item_id=item_id,
-                    timestamp=timestamp,
-                    price=price,
-                    volume=volume
-                )
-            )
+            items_to_merge = []
+            for data in item_history:
+                item_data = get_item_data(item_id, data[TIMESTAMP], expire_data=False)
+                if not item_data:
+                    item_data = ItemData(
+                        runescape_item_id=item_id,
+                        timestamp=data[TIMESTAMP]
+                    )
+                item_data.price = data[PRICE]
+                item_data.volume = data[VOLUME]
+                items_to_merge.append(item_data)
+            map(session.merge, items_to_merge)
 
     except Exception as e:
         if "UNIQUE constraint failed" in traceback.format_exc():
@@ -140,4 +128,5 @@ def add_item_history(item_history):
             return
 
         traceback.print_exc()
-        print(f"Failed to add item to database:\n\t{item_id} at {timestamp}")
+        print(f"Failed to add item history to database:\n\t{item_id}")
+

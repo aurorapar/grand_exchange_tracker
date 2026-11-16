@@ -1,16 +1,13 @@
 import datetime
-import traceback
 
 import sqlalchemy as sql
 from sqlalchemy import String, ForeignKey, Integer, DateTime
-from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import sessionmaker
 
 from constants import *
-from main import load_cache
 
 if not os.path.exists(DATABASE_FILE):
     try:
@@ -37,6 +34,8 @@ class RunescapeItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
+
+    history_processed: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class ItemData(Base):
