@@ -1,17 +1,17 @@
-import database.database
 from api_calls.latest import get_latest_data
 from api_calls.mapping import get_mapping_data
 from api_calls.prices_volume_merge import get_prices_volume_merged
+from database.database import main as initialize_database
 from database.item_operations import add_mapping_data, get_item
 from database.itemdata_operations import add_latest_item_data, add_merged_data
 from graphing.highest_zscores import main as get_highest_zscores
 from job.get_historical_data import get_historical_data
 
 def main():
-    database.database.initialize_database()
+    initialize_database()
     add_items_from_mappings()
     # add_latest_data()
-    add_price_volume()
+    # add_price_volume()
     get_historical_data()
     get_highest_zscores()
 

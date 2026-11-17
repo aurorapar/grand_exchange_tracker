@@ -2,6 +2,7 @@ import datetime
 
 import sqlalchemy as sql
 from sqlalchemy import String, ForeignKey, Integer, DateTime
+from sqlalchemy.schema import Index
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -53,6 +54,8 @@ class ItemData(Base):
     average_low: Mapped[int] = mapped_column(Integer, nullable=True)
     high_price_volume: Mapped[int] = mapped_column(Integer, nullable=True)
     low_price_volume: Mapped[int] = mapped_column(Integer, nullable=True)
+
+Index("itemdata_index", ItemData.runescape_item_id, ItemData.timestamp).create(engine, checkfirst=True)
 
 if __name__ == "__main__":
     main()

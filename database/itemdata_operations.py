@@ -1,4 +1,5 @@
 import datetime
+import time
 import traceback
 
 from sqlalchemy import select, update, func
@@ -21,6 +22,7 @@ def add_merged_data(merged_data):
             for d in [PRICE, VOLUME]:
                 if d not in item_values:
                     item_values[d] = None
+            add_latest_item_data(item_values)
 
 def add_latest_item_data(latest_item_data):
     item_id = latest_item_data[ITEM_ID]
@@ -37,6 +39,7 @@ def add_latest_item_data(latest_item_data):
     volume = latest_item_data[VOLUME]
 
     last_update = get_last_item_data_update()
+    print(f"{timestamp}\t\t{last_update}")
     if not timestamp.replace(tzinfo=datetime.timezone.utc) > last_update.replace(tzinfo=datetime.timezone.utc):
         return
 
@@ -46,6 +49,8 @@ def add_latest_item_data(latest_item_data):
             update_latest_item_data(item, latest_item_data)
             return
 
+        print("Should be adding:")
+        print(latest_item_data)
         with GeSession.begin() as session:
             session.add(
                 ItemData(
@@ -55,6 +60,7 @@ def add_latest_item_data(latest_item_data):
                     volume=volume
                 )
             )
+            session.commit()
 
     except Exception as e:
         if "UNIQUE constraint failed" in traceback.format_exc():
@@ -95,6 +101,7 @@ def update_latest_item_data(item_data, latest_item_data):
                     {ITEM_ID: item_data.id, PRICE: price, VOLUME: volume}
                 ],
             )
+            session.commit()
 
     except Exception as e:
             traceback.print_exc()
@@ -108,20 +115,27 @@ def get_last_item_data_update(expire_data=False):
 
 def add_item_history(item_id, item_history):
     try:
-        with GeSession.begin() as session:
-            items_to_merge = []
-            for data in item_history:
-                item_data = get_item_data(item_id, data[TIMESTAMP], expire_data=False)
-                if not item_data:
+        with Session(engine) as session:
+            q = select(ItemData).where(ItemData.runescape_item_id == item_id)
+            preexisting_items = session.scalars(q).all()
+            total_items = len(item_history)
+            for data_index, data in enumerate(item_history):
+                try:
+                    item_data = [item for item in preexisting_items if item.timestamp == data[TIMESTAMP]].pop()
+                    if item_data.price == data[PRICE] and item_data.volume == data[VOLUME]:
+                        continue
+                except IndexError:
                     item_data = ItemData(
                         runescape_item_id=item_id,
                         timestamp=data[TIMESTAMP]
                     )
-                item_data.price = data[PRICE]
-                item_data.volume = data[VOLUME]
-                items_to_merge.append(item_data)
-            map(session.merge, items_to_merge)
-
+                finally:
+                    item_data.price = data[PRICE]
+                    item_data.volume = data[VOLUME]
+                    session.merge(item_data)
+                    print(f"{time.ctime()} Item Updates: {data_index / total_items*100:.0f}%", end="\r")
+            session.commit()
+            print()
     except Exception as e:
         if "UNIQUE constraint failed" in traceback.format_exc():
             # print(f"Skipped adding item to database (already exists):\n\t{item_id}:{item_name}")

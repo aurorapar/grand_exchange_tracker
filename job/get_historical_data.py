@@ -7,12 +7,13 @@ import time
 from api_calls.historical_price_volume import get_historical_price_volume
 from database.item_operations import get_item, set_history_processed
 from database.itemdata_operations import add_item_history
-from constants import TIMESTAMP, ITEM_ID, PRICE, VOLUME
+from constants import TIMESTAMP, ITEM_ID, PRICE, VOLUME, RUNESCAPE_ITEM_ID
 from settings import THREAD_COUNT
 
 ITEMS_PROCESSED = None
 TOTAL_ITEMS = None
 KILLED = False
+LOCK = threading.Lock()
 
 def get_historical_data():
     global ITEMS_PROCESSED, TOTAL_ITEMS, KILLED
@@ -22,10 +23,11 @@ def get_historical_data():
     item_ids = get_old_history_items()
     TOTAL_ITEMS = len(item_ids)
 
-    t = threading.Thread(target=update_status)
-    t.start()
+    #t = threading.Thread(target=update_status)
+    #t.start()
     with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
-        [executor.submit(update_item_id_history, item_id) for item_id in item_ids]
+         [executor.submit(update_item_id_history, item_id) for item_id in item_ids]
+    update_item_id_history(item_ids[0])
     KILLED = True
 
 
@@ -45,6 +47,7 @@ def get_old_history_items():
 def update_item_id_history(item_id):
     global ITEMS_PROCESSED
     item_history = get_historical_price_volume(item_id)
+    print(f"{time.ctime()} Item ID: {item_id} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%")
     if str(item_id) in item_history:
         data = item_history[str(item_id)]
         max_timestamp = max([d[TIMESTAMP] for d in data])
@@ -59,14 +62,15 @@ def update_item_id_history(item_id):
         try:
             updates = [
                 {
-                    ITEM_ID: item_id,
-                    TIMESTAMP: int(data_piece[TIMESTAMP] / 1000),
+                    RUNESCAPE_ITEM_ID: item_id,
+                    TIMESTAMP: datetime.datetime.fromtimestamp(int(data_piece[TIMESTAMP] / 1000)),
                     PRICE: data_piece[PRICE],
                     VOLUME: data_piece[VOLUME],
                  } for data_piece in data
             ]
-            add_item_history(item_id, updates)
-            set_history_processed(item_id, now)
+            with LOCK:
+                add_item_history(item_id, updates)
+                set_history_processed(item_id, now)
 
         except Exception as exc:
             traceback.print_exc()
@@ -81,6 +85,6 @@ def update_item_id_history(item_id):
 def update_status():
     while not KILLED:
         time.sleep(1)
-        print(f"{time.ctime()} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.0f}%", end="\r")
+        print(f"{time.ctime()} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%", end="\r")
     print("")
 
