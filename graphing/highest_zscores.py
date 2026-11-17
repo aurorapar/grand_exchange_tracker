@@ -117,12 +117,14 @@ def main():
 
 def find_highest_zscores_items():
     all_items = get_item(expire_data=False)
+    item_total = len(all_items)
     highest_zscores_items = []
 
     with multiprocessing.Manager() as manager:
         with multiprocessing.Pool(THREAD_COUNT) as pool:
             results = manager.dict()
-            pool.map(calculate_zscore, [(results, item.id) for item in all_items])
+            item_progress = manager.Value('i', 0)
+            pool.map(calculate_zscore, [(results, item.id, item_progress, item_total) for item in all_items])
 
             for item_id, zscore in results.items():
 
@@ -141,7 +143,11 @@ def find_highest_zscores_items():
 def calculate_zscore(data):
     results = data[0]
     item_id = data[1]
+    item_progress = data[2]
+    item_total = data[3]
     item_data = get_data_for_item(item_id=item_id, expire_data=False)
+    item_progress.value += 1
+    print(f"\t{time.ctime()} {item_progress.value / item_total * 100 : .0f}%", end="\r")
     prices = [data_point.price for data_point in item_data]
     if len(prices) < 2:
         results[item_id] = None
