@@ -26,6 +26,7 @@ def main():
 
 def initialize_database():
     Base.metadata.create_all(engine)
+    Index("itemdata_index", ItemData.runescape_item_id, ItemData.timestamp).create(engine, checkfirst=True)
 
 class Base(DeclarativeBase):
     pass
@@ -55,7 +56,6 @@ class ItemData(Base):
     high_price_volume: Mapped[int] = mapped_column(Integer, nullable=True)
     low_price_volume: Mapped[int] = mapped_column(Integer, nullable=True)
 
-Index("itemdata_index", ItemData.runescape_item_id, ItemData.timestamp).create(engine, checkfirst=True)
 
 if __name__ == "__main__":
     main()

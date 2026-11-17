@@ -1,8 +1,11 @@
 import datetime
+from math import ceil
 
 from database.item_operations import get_item
 from database.itemdata_operations import get_data_for_item
 from graphing.graph_items import graph_items
+
+from settings import *
 
 
 def main(zscore_items):
@@ -24,11 +27,12 @@ def main(zscore_items):
         y_values = [d[1] for d in desired_data]
         y_labels = [f"{y:.2f}" for y in y_values]
 
-        graph_data.append([item_name, [x_values, x_labels, y_values, y_labels]])
+        graph_data.append([f"{item_name} Z:{zscore:.2f}", [x_values, x_labels, y_values, y_labels]])
 
+    graph_data = graph_data[::-1]
     item_names = [x[0] for x in graph_data]
     graph_data = [x[1] for x in graph_data]
-    graph_items("Z-Scores Over Time", item_names, "Date", "Z-Score", graph_data)
+    graph_items("Items With Highest Z-Scores", item_names, "Date", "Price", graph_data)
 
 
 

@@ -9,14 +9,10 @@ from graphing.graph_zscore_items import main as graph_zscore_items
 from job.get_historical_data import get_historical_data
 
 def main():
-    # initialize_database()
-    # add_items_from_mappings()
-    # add_latest_data()
-    # add_price_volume()
-    # get_historical_data()
-    #zscores = get_highest_zscores()
-    zscores = [(7384, 4.094186986854057), (235, 4.157734938844647), (6281, 4.234024947356375), (237, 6.002960917958528)]
-    print(zscores)
+    initialize_database()
+    add_items_from_mappings()
+    get_historical_data()
+    zscores = get_highest_zscores()
     graph_zscore_items(zscores)
 
 
