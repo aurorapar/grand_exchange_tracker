@@ -13,55 +13,7 @@ from settings import *
 def main():
     print("Calculating Z-Scores...")
     highest_zscores_items = find_highest_zscores_items()
-    print(highest_zscores_items)
-    exit()
-
-    for item_name, item_data in data.items():
-        if item_name in IGNORE_KEYS:
-            continue
-        zscore = {
-            ITEM_NAME: item_name,
-            TIMESTAMP: [],
-            ZSCORES: [],
-            ZSCORE_DEV: None
-        }
-
-        item_scores = sorted([(int(t),int(s)) for t, s in item_data.items()], key=lambda x:x[0])
-        for index in range(len(item_scores) + 1):
-            if index < 2:
-                continue
-            sub_prices = [x[1] for x in item_scores][:index]
-            time_stamp = [x[0] for x in item_scores][:index][-1]
-            price = sub_prices[-1]
-
-            s = statistics.stdev(sub_prices)
-            if s == 0:
-                zscore[ZSCORES].append(s)
-            else:
-                m = statistics.mean(sub_prices)
-                zscore[ZSCORES].append((price - m) / s)
-            zscore[TIMESTAMP].append(time_stamp)
-
-        try:
-            zscore[ZSCORE_DEV] = statistics.stdev(zscore[ZSCORES])
-        except Exception as e:
-            print(f"Error trying to parse data for {item_name}, skipping")
-            print(f"\tValues: {zscore[TIMESTAMP]} {zscore[ZSCORES]}")
-            print(e)
-            continue
-
-        if len(highest_zscores) < NUMBER_OF_ZSCORES:
-            highest_zscores.append(zscore)
-            highest_zscores.sort(key=lambda x: x[ZSCORE_DEV])
-            continue
-
-        if zscore[ZSCORE_DEV] > highest_zscores[0][ZSCORE_DEV]:
-            highest_zscores[0] = zscore
-            highest_zscores.sort(key=lambda x: x[ZSCORE_DEV])
-
-    if not highest_zscores:
-        print("Not enough data to graph")
-        exit()
+    return highest_zscores_items
 
     fig, axs = plt.subplots(len(highest_zscores))
     fig.suptitle("Z-Scores Over Time", color=FEATURE_COLOR)

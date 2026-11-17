@@ -14,6 +14,7 @@ def main():
     # add_price_volume()
     get_historical_data()
     get_highest_zscores()
+    graph_zscore_items()
 
 
 def add_items_from_mappings():
