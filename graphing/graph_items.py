@@ -15,6 +15,7 @@ def graph_items(
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
 
+    print("")
     for items_index, item_data in enumerate(items_to_graph):
         item_name = item_names[items_index]
 
@@ -22,6 +23,14 @@ def graph_items(
         x_labels = item_data[1]
         y_values = item_data[2]
         y_labels = item_data[3]
+        if len(x_values) > MAX_GRAPH_DATA_POINTS:
+            print("\tShrinking data points distributed equally...")
+            x_values = [x for xi, x in enumerate(x_values) if xi % int(len(x_values) / MAX_GRAPH_DATA_POINTS) == 0]
+            x_labels = [x for xi, x in enumerate(x_labels) if xi % int(len(x_labels) / MAX_GRAPH_DATA_POINTS) == 0]
+            y_values = [x for xi, x in enumerate(y_values) if xi % int(len(y_values) / MAX_GRAPH_DATA_POINTS) == 0]
+            y_labels = [x for xi, x in enumerate(y_labels) if xi % int(len(y_labels) / MAX_GRAPH_DATA_POINTS) == 0]
+            print("\tDone Shrinking")
+
 
         axs[items_index].set_title(f"{item_name}", color=FEATURE_COLOR)
         axs[items_index].plot(x_values, y_values,

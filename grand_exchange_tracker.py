@@ -5,16 +5,19 @@ from database.database import main as initialize_database
 from database.item_operations import add_mapping_data, get_item
 from database.itemdata_operations import add_latest_item_data, add_merged_data
 from graphing.highest_zscores import main as get_highest_zscores
+from graphing.graph_zscore_items import main as graph_zscore_items
 from job.get_historical_data import get_historical_data
 
 def main():
-    initialize_database()
-    add_items_from_mappings()
+    # initialize_database()
+    # add_items_from_mappings()
     # add_latest_data()
     # add_price_volume()
-    get_historical_data()
-    get_highest_zscores()
-    graph_zscore_items()
+    # get_historical_data()
+    #zscores = get_highest_zscores()
+    zscores = [(7384, 4.094186986854057), (235, 4.157734938844647), (6281, 4.234024947356375), (237, 6.002960917958528)]
+    print(zscores)
+    graph_zscore_items(zscores)
 
 
 def add_items_from_mappings():

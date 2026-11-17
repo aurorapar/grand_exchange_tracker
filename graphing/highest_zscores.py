@@ -1,71 +1,13 @@
-import multiprocessing
-import datetime
 import statistics
 import time
 
-import matplotlib.pyplot as plt
-
-import highest_zscores
 from database.itemdata_operations import get_data_for_item
 from database.item_operations import get_item
 from settings import *
 
 def main():
     print("Calculating Z-Scores...")
-    highest_zscores_items = find_highest_zscores_items()
-    return highest_zscores_items
-
-    fig, axs = plt.subplots(len(highest_zscores))
-    fig.suptitle("Z-Scores Over Time", color=FEATURE_COLOR)
-    fig.set_facecolor(BACKGROUND_COLOR)
-    fig.set_edgecolor(FEATURE_COLOR)
-
-    for item_index, item_data in enumerate(highest_zscores):
-        item_name = item_data[ITEM_NAME]
-        times = item_data[TIMESTAMP]
-        scores = item_data[ZSCORES]
-
-        axs[item_index].set_title(f"{item_name}", color=FEATURE_COLOR)
-        try:
-            axs[item_index].plot(times, scores,
-                     marker='.',
-                     linestyle='solid',
-                     color=LINE_COLOR
-                     )
-        except Exception as e:
-            print(e)
-            print(item_name)
-            print(times)
-            print(scores)
-
-        axs[item_index].set_xlabel(f'Times', color=FEATURE_COLOR)
-        axs[item_index].set_ylabel(f'Z-Scores', color=FEATURE_COLOR)
-
-        x_ticks = [int(x) for x in axs[item_index].get_xticks()]
-        x_dates = [datetime.datetime.fromtimestamp(x) for x in x_ticks]
-        x_labels = [datetime.datetime.strftime(x, "%Y%m%d\n%H:%M") for x in x_dates]
-
-        axs[item_index].set_xticks(x_ticks, x_labels, color=FEATURE_COLOR)
-
-        y_ticks = axs[item_index].get_yticks()
-        y_labels = [f"{y:.2f}" for y in y_ticks]
-        axs[item_index].set_yticks(y_ticks, y_labels, color=FEATURE_COLOR)
-
-        axs[item_index].tick_params(which="both", labelsize="small", color=FEATURE_COLOR)
-
-        plt.setp(axs[item_index].get_xticklabels(), rotation=30, horizontalalignment='right', color=FEATURE_COLOR)
-
-        for score, timestamp in list(zip(scores, times)):
-            axs[item_index].annotate(f"{score:.2f}",
-                        xy=(timestamp, score), xycoords='data',
-                        xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
-
-        axs[item_index].set_facecolor(BACKGROUND_COLOR)
-        for spine in axs[item_index].spines.values():
-            spine.set_edgecolor(FEATURE_COLOR)
-
-    plt.tight_layout()
-    plt.show()
+    return find_highest_zscores_items()
 
 def find_highest_zscores_items():
     all_items = get_item(expire_data=False)
