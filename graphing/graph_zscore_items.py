@@ -19,7 +19,7 @@ def main(zscore_items, lookback_date_cutoff):
         item_name = item.name
 
         data_for_item = get_data_for_item(item_id, expire_data=False)
-        data_for_item = [d for d in data_for_item if d.timestamp > lookback_date_cutoff]
+        data_for_item = [d for d in data_for_item if d.timestamp.replace(tzinfo=datetime.UTC) > lookback_date_cutoff]
         if not data_for_item:
             print(f"No data for {item.name}???")
             print(data_for_item)

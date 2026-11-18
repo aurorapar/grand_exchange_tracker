@@ -1,3 +1,4 @@
+import datetime
 import statistics
 import time
 
@@ -45,7 +46,7 @@ def calculate_zscore(data):
     item_progress = data[3]
     item_total = data[4]
     item_data = get_data_for_item(item_id=item_id, expire_data=False)
-    item_data = [d for d in item_data if d.timestamp > lookback_date_cutoff]
+    item_data = [d for d in item_data if d.timestamp.replace(tzinfo=datetime.UTC) > lookback_date_cutoff]
     item_progress.value += 1
     print(f"\t{time.ctime()} {item_progress.value / item_total * 100 : .0f}%", end="\r")
 
