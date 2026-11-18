@@ -19,6 +19,7 @@ def main():
 
     lookback_date_cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)
     zscores = get_highest_zscores(lookback_date_cutoff)
+    # zscores = [(22740, 3.517726385585042), (24389, 3.520005649967414), (32080, 3.609674241622941), (235, 3.6588906619802253), (2673, 3.7071018237938063), (11902, 3.7272070418749514), (5354, 3.8828318006221614), (12273, 4.047730223681083), (2629, 4.178486547930949), (237, 4.71136332056608)]
     graph_zscore_items(zscores, lookback_date_cutoff)
 
 
