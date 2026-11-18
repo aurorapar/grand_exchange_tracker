@@ -52,7 +52,7 @@ def graph_items(
         axs[items_index].annotate(f"{max_y_point[1]:.2f}",
                         xy=(max_y_point[0], max_y_point[1]), xycoords='data',
                         xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
-
+    
         axs[items_index].set_facecolor(BACKGROUND_COLOR)
         for spine in axs[items_index].spines.values():
             spine.set_edgecolor(FEATURE_COLOR)
