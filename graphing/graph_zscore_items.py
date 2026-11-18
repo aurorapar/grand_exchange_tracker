@@ -19,7 +19,7 @@ def main(zscore_items, lookback_date_cutoff):
         item_name = item.name
 
         data_for_item = get_data_for_item(item_id, expire_data=False)
-        data_for_item = [d for d in data_for_item if d.timestamp > lookback_date_cutoff]
+        data_for_item = [d for d in data_for_item if d.timestamp.replace(tzinfo=datetime.UTC) > lookback_date_cutoff]
         if not data_for_item:
             print(f"No data for {item.name}???")
             print(data_for_item)
@@ -35,7 +35,7 @@ def main(zscore_items, lookback_date_cutoff):
         y_values = [d[1] for d in desired_data]
         y_labels = [f"{y:.2f}" for y in y_values]
 
-        graph_data.append([f"{item_name}    Z:{zscore:.2f}    Avg Vol: {int(average_volume)}", [x_values, x_labels, y_values, y_labels]])
+        graph_data.append([f"{item_name}\nZ:{zscore:.2f}    Avg Vol: {int(average_volume)}", [x_values, x_labels, y_values, y_labels]])
 
     print("Data Prepared. Starting graphing")
     graph_data = graph_data[::-1]
