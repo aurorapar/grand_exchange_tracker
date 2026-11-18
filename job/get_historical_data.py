@@ -48,7 +48,7 @@ def get_old_history_items():
 def update_item_id_history(item_id):
     global ITEMS_PROCESSED
     item_history = get_historical_price_volume(item_id)
-    print(f"{time.ctime()} Item ID: {item_id} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%", end="\r")
+    print(f"\t{time.ctime()} Item ID: {item_id} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%", end="\r")
     if str(item_id) in item_history:
         data = item_history[str(item_id)]
         max_timestamp = max([d[TIMESTAMP] for d in data])
@@ -56,6 +56,7 @@ def update_item_id_history(item_id):
 
         now = datetime.datetime.now()
         if now- max_timestamp > datetime.timedelta(days=30):
+            ITEMS_PROCESSED += 1
             return
 
         data_length = len(data)

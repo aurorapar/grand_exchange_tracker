@@ -35,6 +35,7 @@ def find_highest_zscores_items():
                 if highest_zscores_items[0][1] < zscore:
                     highest_zscores_items = [(item_id, zscore)] + highest_zscores_items[1:]
                     highest_zscores_items = sorted(highest_zscores_items, key=lambda x: x[1])
+    print()
     return highest_zscores_items
 
 def calculate_zscore(data):
