@@ -30,7 +30,7 @@ def main(zscore_items, lookback_date_cutoff):
         average_volume = statistics.mean(volumes) if volumes else 0
 
         x_values = [d[0].timestamp() for d in desired_data]
-        x_labels = [datetime.datetime.strftime(d[0], "%Y%m%d\n%H:%M") for d in desired_data]
+        x_labels = [datetime.datetime.strftime(d[0], "%Y%m%d") for d in desired_data]
 
         y_values = [d[1] for d in desired_data]
         y_labels = [f"{y:.2f}" for y in y_values]
