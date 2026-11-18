@@ -1,3 +1,5 @@
+import datetime
+
 from api_calls.latest import get_latest_data
 from api_calls.mapping import get_mapping_data
 from api_calls.prices_volume_merge import get_prices_volume_merged
@@ -6,16 +8,18 @@ from database.item_operations import add_mapping_data, get_item
 from database.itemdata_operations import add_latest_item_data, add_merged_data
 from graphing.highest_zscores import main as get_highest_zscores
 from graphing.graph_zscore_items import main as graph_zscore_items
-from graphing.latest_zscores import main as get_latest_zscore_items
 from job.get_historical_data import get_historical_data
+from settings import DAYS_PAST_TO_GRAPH
+
 
 def main():
     initialize_database()
     add_items_from_mappings()
     get_historical_data()
-    # zscores = get_highest_zscores()
-    zscores = get_latest_zscore_items()
-    graph_zscore_items(zscores)
+
+    lookback_date_cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)
+    zscores = get_highest_zscores(lookback_date_cutoff)
+    graph_zscore_items(zscores, lookback_date_cutoff)
 
 
 def add_items_from_mappings():

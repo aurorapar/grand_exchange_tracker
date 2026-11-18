@@ -1,6 +1,5 @@
 import datetime
 import statistics
-from math import ceil
 
 from database.item_operations import get_item
 from database.itemdata_operations import get_data_for_item
@@ -9,7 +8,7 @@ from graphing.graph_items import graph_items
 from settings import *
 
 
-def main(zscore_items):
+def main(zscore_items, lookback_date_cutoff):
     print("Preparing graph data")
     graph_data = []
 
@@ -20,7 +19,7 @@ def main(zscore_items):
         item_name = item.name
 
         data_for_item = get_data_for_item(item_id, expire_data=False)
-        data_for_item = [d for d in data_for_item if d.timestamp > datetime.datetime.utcnow() - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)]
+        data_for_item = [d for d in data_for_item if d.timestamp > lookback_date_cutoff]
         if not data_for_item:
             print(f"No data for {item.name}???")
             print(data_for_item)

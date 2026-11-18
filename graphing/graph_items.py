@@ -15,6 +15,7 @@ def graph_items(
     fig.suptitle(title, color=FEATURE_COLOR)
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
+    fig.tight_layout()
 
     print("")
     for items_index, item_data in enumerate(items_to_graph):
