@@ -9,7 +9,7 @@ from database.itemdata_operations import add_latest_item_data, add_merged_data
 from graphing.highest_zscores import main as get_highest_zscores
 from graphing.graph_zscore_items import main as graph_zscore_items
 from job.get_historical_data import get_historical_data
-from settings import DAYS_PAST_TO_GRAPH
+from settings import LOOKBACK_DAYS
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
     add_items_from_mappings()
     get_historical_data()
 
-    lookback_date_cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)
+    lookback_date_cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=LOOKBACK_DAYS)
     zscores = get_highest_zscores(lookback_date_cutoff)
     graph_zscore_items(zscores, lookback_date_cutoff)
 

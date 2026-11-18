@@ -1,24 +1,25 @@
-import multiprocessing
-
 from constants import *
 
-PROCESSES_TO_SPAWN = multiprocessing.cpu_count()
 THREAD_COUNT = 10
 
-TRACKED_ITEMS = ["Black set (lg)", "Black salamander"]
-
-NUMBER_OF_ZSCORES = 8
+# graph this number of items
+NUMBER_OF_ITEMS_TO_GRAPH = 8
 
 BACKGROUND_COLOR = BLACK
 LINE_COLOR = BLUE
 FEATURE_COLOR = PINK
 GRAPH_LINE_SIZE = 1.0
 
-MAX_GRAPH_LABELS = 10
-
-# dont graph if threshold function is true
+# skip item if threshold function is true
+# uses average price and volume over a time span
 THRESHOLDS = [
     lambda price, volume:  (price < 10000 and volume < 10000)
 ]
+
+# number of most recent points for average volume calculations
+# increase to use older data when determining average volume for threshold
 THRESHOLD_SAMPLE_POINTS = 100
-DAYS_PAST_TO_GRAPH = 90
+
+# number of days to consider for all data
+# current_date - LOOKBACK_DAYS
+LOOKBACK_DAYS = 90

@@ -26,7 +26,8 @@ def main(zscore_items, lookback_date_cutoff):
             continue
         desired_data = [(item_data.timestamp, item_data.price) for item_data in data_for_item]
         desired_data = sorted(desired_data, key=lambda x: x[0])
-        volumes = [item_data.volume or 0 for item_data in data_for_item[:min(len(data_for_item), THRESHOLD_SAMPLE_POINTS) * -1]]
+        number_of_points = min(len(data_for_item), THRESHOLD_SAMPLE_POINTS) * -1
+        volumes = [item_data.volume or 0 for item_data in data_for_item[:number_of_points]]
         average_volume = statistics.mean(volumes) if volumes else 0
 
         x_values = [d[0].timestamp() for d in desired_data]
@@ -41,7 +42,7 @@ def main(zscore_items, lookback_date_cutoff):
     graph_data = graph_data[::-1]
     item_names = [x[0] for x in graph_data]
     graph_data = [x[1] for x in graph_data]
-    graph_items(f"{NUMBER_OF_ZSCORES} Items With Highest Z-Scores\nSince {datetime.datetime.utcnow() - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)}", item_names, "Date", "Price", graph_data)
+    graph_items(f"{NUMBER_OF_ITEMS_TO_GRAPH} Items With Highest Z-Scores\nSince {datetime.datetime.utcnow() - datetime.timedelta(days=LOOKBACK_DAYS)}", item_names, "Date", "Price", graph_data)
 
 
 

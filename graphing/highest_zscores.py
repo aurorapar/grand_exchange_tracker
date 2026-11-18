@@ -28,7 +28,7 @@ def find_highest_zscores_items(lookback_date_cutoff):
 
                 if not zscore:
                     continue
-                if len(highest_zscores_items) < NUMBER_OF_ZSCORES:
+                if len(highest_zscores_items) < NUMBER_OF_ITEMS_TO_GRAPH:
                     highest_zscores_items.append((item_id, zscore))
                     highest_zscores_items = sorted(highest_zscores_items, key=lambda x: x[1])
                     continue
@@ -54,7 +54,8 @@ def calculate_zscore(data):
         results[item_id] = None
         return
 
-    threshold_points = [data_point for data_point in item_data[:min(len(item_data), threshold_sample_points) * -1]]
+    number_of_last_points = min(len(item_data), threshold_sample_points) * -1
+    threshold_points = [data_point for data_point in item_data[:number_of_last_points]]
     newest_prices = [d.price or 0 for d in threshold_points]
     newest_volumes = [d.volume or 0 for d in threshold_points]
     if newest_volumes and newest_volumes:

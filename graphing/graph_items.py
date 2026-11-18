@@ -20,7 +20,6 @@ def graph_items(
     col_count = row_count
     while row_count > int(graph_count/row_count) + graph_count % row_count:
         row_count -= 1
-    print(row_count, col_count)
 
     fig = plt.figure(layout="constrained")
     fig.suptitle(title, color=FEATURE_COLOR)
