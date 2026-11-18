@@ -10,6 +10,7 @@ from settings import *
 
 
 def main(zscore_items):
+    print("Preparing graph data")
     graph_data = []
 
     for scores in zscore_items:
@@ -30,12 +31,13 @@ def main(zscore_items):
         y_values = [d[1] for d in desired_data]
         y_labels = [f"{y:.2f}" for y in y_values]
 
-        graph_data.append([f"{item_name} Z:{zscore:.2f} Average Volume: {int(average_volume)}", [x_values, x_labels, y_values, y_labels]])
+        graph_data.append([f"{item_name}    Z:{zscore:.2f}    Avg Vol: {int(average_volume)}", [x_values, x_labels, y_values, y_labels]])
 
+    print("Data Prepared. Starting graphing")
     graph_data = graph_data[::-1]
     item_names = [x[0] for x in graph_data]
     graph_data = [x[1] for x in graph_data]
-    graph_items("Items With Highest Z-Scores", item_names, "Date", "Price", graph_data)
+    graph_items(f"{NUMBER_OF_ZSCORES} Items With Highest Z-Scores", item_names, "Date", "Price", graph_data)
 
 
 

@@ -51,7 +51,7 @@ def graph_items(
         max_y_point = list(zip(item_data[0], item_data[2]))
         max_y_point = sorted(max_y_point, key=lambda x: x[1])[-1]
 
-        axs[items_index].annotate(f"{max_y_point[1]:.2f}",
+        axs[items_index].annotate(f"{max_y_point[1]:.0f}",
                         xy=(max_y_point[0], max_y_point[1]), xycoords='data',
                         xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
 
