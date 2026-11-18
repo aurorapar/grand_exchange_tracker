@@ -9,6 +9,9 @@ def main():
     print("Calculating Z-Scores...")
     return find_highest_zscores_items()
 
+threshold_functions = THRESHOLDS
+threshold_sample_points = THRESHOLD_SAMPLE_POINTS
+
 def find_highest_zscores_items():
     all_items = get_item(expire_data=False)
     item_total = len(all_items)
@@ -40,8 +43,24 @@ def calculate_zscore(data):
     item_progress = data[2]
     item_total = data[3]
     item_data = get_data_for_item(item_id=item_id, expire_data=False)
+    if not item_data:
+        results[item_id] = None
+        return
     item_progress.value += 1
     print(f"\t{time.ctime()} {item_progress.value / item_total * 100 : .0f}%", end="\r")
+
+    threshold_points = [data_point for data_point in item_data[:min(len(item_data), threshold_sample_points) * -1]]
+    newest_prices = [d.price or 0 for d in threshold_points]
+    newest_volumes = [d.volume or 0 for d in threshold_points]
+    if newest_volumes and newest_volumes:
+        average_price = statistics.mean(newest_prices)
+        average_volume = statistics.mean(newest_volumes)
+
+        for threshold_check in threshold_functions:
+            if threshold_check(average_price, average_volume):
+                results[item_id] = None
+                return
+
     prices = [data_point.price for data_point in item_data]
     if len(prices) < 2:
         results[item_id] = None

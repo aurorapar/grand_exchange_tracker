@@ -11,7 +11,7 @@ def graph_items(
         items_to_graph
     ):
 
-    fig, axs = plt.subplots(len(items_to_graph))
+    fig, axs = plt.subplots(len(items_to_graph), sharex=True)
     fig.suptitle(title, color=FEATURE_COLOR)
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
@@ -27,9 +27,11 @@ def graph_items(
 
         axs[items_index].set_title(f"{item_name}", color=FEATURE_COLOR)
         axs[items_index].plot(x_values, y_values,
-                 marker='.',
-                 linestyle='solid',
-                 color=LINE_COLOR
+            marker='.',
+            markersize=GRAPH_LINE_SIZE,
+            linestyle='solid',
+            linewidth=GRAPH_LINE_SIZE,
+            color=LINE_COLOR
                  )
 
         axs[items_index].set_xlabel(x_label, color=FEATURE_COLOR)
@@ -52,7 +54,7 @@ def graph_items(
         axs[items_index].annotate(f"{max_y_point[1]:.2f}",
                         xy=(max_y_point[0], max_y_point[1]), xycoords='data',
                         xytext=(1.5, 1.5), textcoords='offset points', color=FEATURE_COLOR)
-    
+
         axs[items_index].set_facecolor(BACKGROUND_COLOR)
         for spine in axs[items_index].spines.values():
             spine.set_edgecolor(FEATURE_COLOR)
