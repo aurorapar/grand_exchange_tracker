@@ -20,10 +20,15 @@ def main(zscore_items):
         item_name = item.name
 
         data_for_item = get_data_for_item(item_id, expire_data=False)
+        data_for_item = [d for d in data_for_item if d.timestamp > datetime.datetime.utcnow() - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)]
+        if not data_for_item:
+            print(f"No data for {item.name}???")
+            print(data_for_item)
+            continue
         desired_data = [(item_data.timestamp, item_data.price) for item_data in data_for_item]
         desired_data = sorted(desired_data, key=lambda x: x[0])
         volumes = [item_data.volume or 0 for item_data in data_for_item[:min(len(data_for_item), THRESHOLD_SAMPLE_POINTS) * -1]]
-        average_volume = statistics.mean(volumes)
+        average_volume = statistics.mean(volumes) if volumes else 0
 
         x_values = [d[0].timestamp() for d in desired_data]
         x_labels = [datetime.datetime.strftime(d[0], "%Y%m%d\n%H:%M") for d in desired_data]
@@ -37,7 +42,7 @@ def main(zscore_items):
     graph_data = graph_data[::-1]
     item_names = [x[0] for x in graph_data]
     graph_data = [x[1] for x in graph_data]
-    graph_items(f"{NUMBER_OF_ZSCORES} Items With Highest Z-Scores", item_names, "Date", "Price", graph_data)
+    graph_items(f"{NUMBER_OF_ZSCORES} Items With Highest Z-Scores\nSince {datetime.datetime.utcnow() - datetime.timedelta(days=DAYS_PAST_TO_GRAPH)}", item_names, "Date", "Price", graph_data)
 
 
 

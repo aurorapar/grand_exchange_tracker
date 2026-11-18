@@ -6,13 +6,15 @@ from database.item_operations import add_mapping_data, get_item
 from database.itemdata_operations import add_latest_item_data, add_merged_data
 from graphing.highest_zscores import main as get_highest_zscores
 from graphing.graph_zscore_items import main as graph_zscore_items
+from graphing.latest_zscores import main as get_latest_zscore_items
 from job.get_historical_data import get_historical_data
 
 def main():
     initialize_database()
     add_items_from_mappings()
     get_historical_data()
-    zscores = get_highest_zscores()
+    # zscores = get_highest_zscores()
+    zscores = get_latest_zscore_items()
     graph_zscore_items(zscores)
 
 

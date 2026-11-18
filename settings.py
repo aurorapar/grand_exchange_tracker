@@ -21,3 +21,4 @@ THRESHOLDS = [
     lambda price, volume:  (price < 10000 and volume < 10000)
 ]
 THRESHOLD_SAMPLE_POINTS = 100
+DAYS_PAST_TO_GRAPH = 90
