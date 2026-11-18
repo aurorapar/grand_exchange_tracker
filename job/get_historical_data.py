@@ -23,8 +23,6 @@ def get_historical_data():
     item_ids = get_old_history_items()
     TOTAL_ITEMS = len(item_ids)
 
-    #t = threading.Thread(target=update_status)
-    #t.start()
     with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
          [executor.submit(update_item_id_history, item_id) for item_id in item_ids]
     update_item_id_history(item_ids[0])
@@ -59,8 +57,6 @@ def update_item_id_history(item_id):
             ITEMS_PROCESSED += 1
             return
 
-        data_length = len(data)
-
         try:
             updates = [
                 {
@@ -78,9 +74,6 @@ def update_item_id_history(item_id):
             traceback.print_exc()
             print(f'{item_id} generated an exception')
             input("Paused")
-
-        # print(f"Item {data_index/data_length*100:.0f}%", end="\r")
-        # print(f"Total {future_index / item_count*100:.0f}%", end="\r")
 
     ITEMS_PROCESSED += 1
 

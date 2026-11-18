@@ -25,7 +25,7 @@ def add_item_from_mapping(item_mapping_data):
 
     except Exception as e:
         if "UNIQUE constraint failed" in traceback.format_exc():
-            # print(f"Skipped adding item to database (already exists):\n\t{item_id}:{item_name}")
+            # Skip adding item to database (already exists)
             return
 
         traceback.print_exc()

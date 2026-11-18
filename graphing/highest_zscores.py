@@ -84,9 +84,6 @@ def calculate_zscore(data):
 
     results[item_id] = zscore
 
-def get_height_from_width(width):
-    ratio = 6.4/4.8
-    return width / ratio
 
 if __name__ == "__main__":
     main()
