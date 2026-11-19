@@ -1,3 +1,5 @@
+import datetime
+
 from constants import *
 
 THREAD_COUNT = 10
@@ -6,7 +8,10 @@ THREAD_COUNT = 10
 NUMBER_OF_ITEMS_TO_GRAPH = 8
 
 BACKGROUND_COLOR = BLACK
-LINE_COLOR = BLUE
+LINE_COLORS = [
+    BLUE,
+    YELLOW
+]
 FEATURE_COLOR = PINK
 GRAPH_LINE_SIZE = 1.0
 
@@ -20,6 +25,9 @@ THRESHOLDS = [
 # increase to use older data when determining average volume for threshold
 THRESHOLD_SAMPLE_POINTS = 100
 
+# Skip updating items if API data is younger than this value
+API_REFRESH = datetime.timedelta(hours=12)
+
 # number of days to consider for all data
 # current_date - LOOKBACK_DAYS
-LOOKBACK_DAYS = 90
+LOOKBACK_DAYS = 900

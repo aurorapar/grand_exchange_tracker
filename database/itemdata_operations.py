@@ -113,34 +113,36 @@ def get_last_item_data_update(expire_data=False):
         return latest_update
 
 
-def add_item_history(item_id, item_history):
+def add_item_history(item, item_history):
+    print()
     try:
         with Session(engine) as session:
-            q = select(ItemData).where(ItemData.runescape_item_id == item_id)
+            q = select(ItemData).where(ItemData.runescape_item_id == item.id)
             preexisting_items = session.scalars(q).all()
             total_items = len(item_history)
             for data_index, data in enumerate(item_history):
                 try:
-                    item_data = [item for item in preexisting_items if item.timestamp == data[TIMESTAMP]].pop()
+                    item_data = [item for item in preexisting_items if
+                                 item.timestamp.replace(tzinfo=datetime.UTC) == data[TIMESTAMP].replace(tzinfo=datetime.UTC)].pop()
                     if item_data.price == data[PRICE] and item_data.volume == data[VOLUME]:
                         continue
                 except IndexError:
                     item_data = ItemData(
-                        runescape_item_id=item_id,
+                        runescape_item_id=item.id,
                         timestamp=data[TIMESTAMP]
                     )
                 finally:
                     item_data.price = data[PRICE]
                     item_data.volume = data[VOLUME]
                     session.merge(item_data)
-                    print(f"{time.ctime()} Item Updates: {data_index / total_items*100:.0f}%", end="\r")
+                    print(f"\t{time.ctime()} {(data_index+1) / total_items*100:.0f}% {item_data.runescape_item_id} {item_data.timestamp}", end="\r")
             session.commit()
-            print()
+
     except Exception as e:
         if "UNIQUE constraint failed" in traceback.format_exc():
-            # print(f"Skipped adding item to database (already exists):\n\t{item_id}:{item_name}")
+            print(f"Skipped adding item to database (already exists):\n\t{item.id}")
             return
 
         traceback.print_exc()
-        print(f"Failed to add item history to database:\n\t{item_id}")
+        print(f"Failed to add item history to database:\n\t{item.id}:{item.name}")
 

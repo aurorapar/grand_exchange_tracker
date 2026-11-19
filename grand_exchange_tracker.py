@@ -1,4 +1,7 @@
 import datetime
+import multiprocessing
+import threading
+import time
 
 from api_calls.latest import get_latest_data
 from api_calls.mapping import get_mapping_data
@@ -19,7 +22,7 @@ def main():
 
     lookback_date_cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=LOOKBACK_DAYS)
     zscores = get_highest_zscores(lookback_date_cutoff)
-    graph_zscore_items(zscores, lookback_date_cutoff)
+    display_multiple_graphs(lookback_date_cutoff, zscores)
 
 
 def add_items_from_mappings():
@@ -57,6 +60,22 @@ def add_price_volume():
     merged_data = get_prices_volume_merged()
     print("Storing Merged Price And Volume in database")
     add_merged_data(merged_data)
+
+
+def display_multiple_graphs(lookback_date, zscores):
+    display_thread = threading.Thread(target=graph_zscore, args=(lookback_date, zscores))
+    display_thread.start()
+    while True:
+        time.sleep(1)
+
+def graph_zscore(lookback_date, zscores):
+    procs = []
+    for zscore in zscores:
+        proc = multiprocessing.Process(target=graph_zscore_items, args=([zscore], lookback_date))
+        proc.start()
+        procs.append(proc)
+    for proc in procs:
+        proc.join()
 
 
 if __name__ == "__main__":

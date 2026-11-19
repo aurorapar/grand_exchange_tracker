@@ -7,26 +7,29 @@ import time
 from api_calls.historical_price_volume import get_historical_price_volume
 from database.item_operations import get_item, set_history_processed
 from database.itemdata_operations import add_item_history
-from constants import TIMESTAMP, ITEM_ID, PRICE, VOLUME, RUNESCAPE_ITEM_ID
-from settings import THREAD_COUNT
+from constants import TIMESTAMP, PRICE, VOLUME, RUNESCAPE_ITEM_ID
+from settings import THREAD_COUNT, API_REFRESH
 
-ITEMS_PROCESSED = None
-TOTAL_ITEMS = None
 KILLED = False
 LOCK = threading.Lock()
 
 def get_historical_data():
-    global ITEMS_PROCESSED, TOTAL_ITEMS, KILLED
     print("Populating historical data")
 
-    ITEMS_PROCESSED = 0
-    item_ids = get_old_history_items()
-    TOTAL_ITEMS = len(item_ids)
-
+    items = get_old_history_items()
+    if not items:
+        print("\tHave recent data, skipping")
+        return
+    items_processed = 0
+    total_items = len(items)
+    print(f"{total_items} items need updating")
+    print("\t(If some items need updating every time, there has been no market data for them recently)")
+    sleep_time = 0
+    # for item in items:
+    #     update_item_id_history(item, sleep_time, items_processed, total_items)
     with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
-         [executor.submit(update_item_id_history, item_id) for item_id in item_ids]
-    update_item_id_history(item_ids[0])
-    KILLED = True
+       [executor.submit(update_item_id_history, item, sleep_time, items_processed, total_items) for item in items]
+    update_item_id_history(items[0], sleep_time, items_processed, total_items)
     print()
 
 
@@ -35,51 +38,48 @@ def get_old_history_items():
     result = []
     for item in all_item_ids:
         if not item.history_processed:
-            result.append(item.id)
+            result.append(item)
             continue
-        now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-        item_timestamp = item.history_processed.replace(tzinfo=datetime.timezone.utc)
-        if now - item_timestamp > datetime.timedelta(days=1):
-            result.append(item.id)
+        now = datetime.datetime.now().replace(tzinfo=datetime.UTC)
+        item_timestamp = item.history_processed.replace(tzinfo=datetime.UTC)
+        if now - item_timestamp > API_REFRESH:
+            result.append(item)
     return result
 
-def update_item_id_history(item_id):
-    global ITEMS_PROCESSED
-    item_history = get_historical_price_volume(item_id)
-    print(f"\t{time.ctime()} Item ID: {item_id} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%", end="\r")
-    if str(item_id) in item_history:
-        data = item_history[str(item_id)]
-        max_timestamp = max([d[TIMESTAMP] for d in data])
-        max_timestamp = datetime.datetime.fromtimestamp(max_timestamp/1000)
+def update_item_id_history(item, sleep_time, items_processed, total_items):
+    item_history = get_historical_price_volume(item.id, sleep_time)
+    if str(item.id) in item_history:
+        item_history = item_history[str(item.id)]
+        max_timestamp = max([d[TIMESTAMP] for d in item_history])
+        max_timestamp = datetime.datetime.fromtimestamp(max_timestamp / 1000)
+        item_history = [h for h in item_history if not item.history_processed or
+                        datetime.datetime.fromtimestamp(h[TIMESTAMP] / 1000).replace(
+                            tzinfo=datetime.UTC) > item.history_processed.replace(tzinfo=datetime.UTC)]
 
-        now = datetime.datetime.now()
-        if now- max_timestamp > datetime.timedelta(days=30):
-            ITEMS_PROCESSED += 1
+        if not item_history:
+            items_processed += 1
+            print(f"\t{time.ctime()} Item: {item.name} {items_processed / total_items * 100:.2f}% {' ' * 20 }", end="\r")
             return
+        new_points_count = len(item_history)
+        print(f"\t{time.ctime()} Item: {item.name} {items_processed / total_items * 100:.2f}% ({new_points_count} new prices) {' ' * 20 }", end="\r")
 
         try:
+
             updates = [
                 {
-                    RUNESCAPE_ITEM_ID: item_id,
+                    RUNESCAPE_ITEM_ID: item.id,
                     TIMESTAMP: datetime.datetime.fromtimestamp(int(data_piece[TIMESTAMP] / 1000)),
                     PRICE: data_piece[PRICE],
                     VOLUME: data_piece[VOLUME],
-                 } for data_piece in data
+                 } for data_piece in item_history
             ]
-            with LOCK:
-                add_item_history(item_id, updates)
-                set_history_processed(item_id, now)
+
+            add_item_history(item, updates)
+            set_history_processed(item.id, max_timestamp)
+            items_processed += 1
 
         except Exception as exc:
             traceback.print_exc()
-            print(f'{item_id} generated an exception')
+            print(f'{item.id} generated an exception')
             input("Paused")
-
-    ITEMS_PROCESSED += 1
-
-def update_status():
-    while not KILLED:
-        time.sleep(1)
-        print(f"{time.ctime()} {ITEMS_PROCESSED / TOTAL_ITEMS * 100:.2f}%", end="\r")
-    print("")
 
