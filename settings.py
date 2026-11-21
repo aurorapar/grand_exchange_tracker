@@ -30,4 +30,4 @@ API_REFRESH = datetime.timedelta(hours=12)
 
 # number of days to consider for all data
 # current_date - LOOKBACK_DAYS
-LOOKBACK_DAYS = 900
+LOOKBACK_DAYS = 14

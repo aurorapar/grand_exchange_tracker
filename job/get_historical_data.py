@@ -7,16 +7,27 @@ import time
 from api_calls.historical_price_volume import get_historical_price_volume
 from database.item_operations import get_item, set_history_processed
 from database.itemdata_operations import add_item_history
+from job.old_data_items import get_old_history_items
 from constants import TIMESTAMP, PRICE, VOLUME, RUNESCAPE_ITEM_ID
 from settings import THREAD_COUNT, API_REFRESH
 
 KILLED = False
 LOCK = threading.Lock()
 
-def get_historical_data():
+items_processed = 0
+
+def get_historical_data(thread_lock):
+    global items_processed
+    items_processed = 0
+
     print("Populating historical data")
 
-    items = get_old_history_items()
+    timestamp = get_historical_price_volume(2, 0)
+    timestamp = timestamp['2']
+    timestamp = int(max([d[TIMESTAMP] for d in timestamp]) / 1000)
+    timestamp = datetime.datetime.fromtimestamp(timestamp, datetime.UTC)
+    items = get_old_history_items(timestamp)
+
     if not items:
         print("\tHave recent data, skipping")
         return
@@ -28,25 +39,14 @@ def get_historical_data():
     # for item in items:
     #     update_item_id_history(item, sleep_time, items_processed, total_items)
     with concurrent.futures.ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
-       [executor.submit(update_item_id_history, item, sleep_time, items_processed, total_items) for item in items]
-    update_item_id_history(items[0], sleep_time, items_processed, total_items)
+       [executor.submit(update_item_id_history, thread_lock, item, sleep_time, total_items) for item in items]
+    # update_item_id_history(items[0], sleep_time, items_processed, total_items)
     print()
 
 
-def get_old_history_items():
-    all_item_ids = get_item(expire_data=False)
-    result = []
-    for item in all_item_ids:
-        if not item.history_processed:
-            result.append(item)
-            continue
-        now = datetime.datetime.now().replace(tzinfo=datetime.UTC)
-        item_timestamp = item.history_processed.replace(tzinfo=datetime.UTC)
-        if now - item_timestamp > API_REFRESH:
-            result.append(item)
-    return result
+def update_item_id_history(thread_lock, item, sleep_time, total_items):
+    global items_processed
 
-def update_item_id_history(item, sleep_time, items_processed, total_items):
     item_history = get_historical_price_volume(item.id, sleep_time)
     if str(item.id) in item_history:
         item_history = item_history[str(item.id)]
@@ -73,10 +73,10 @@ def update_item_id_history(item, sleep_time, items_processed, total_items):
                     VOLUME: data_piece[VOLUME],
                  } for data_piece in item_history
             ]
-
-            add_item_history(item, updates)
-            set_history_processed(item.id, max_timestamp)
-            items_processed += 1
+            with thread_lock:
+                add_item_history(item, updates)
+                set_history_processed(item.id, max_timestamp)
+                items_processed += 1
 
         except Exception as exc:
             traceback.print_exc()

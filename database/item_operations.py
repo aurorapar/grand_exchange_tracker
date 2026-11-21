@@ -32,11 +32,12 @@ def add_item_from_mapping(item_mapping_data):
         print(f"Failed to add item to database:\n\t{item_id}:{item_name}")
 
 
-def add_mapping_data(mapping_data):
+def add_mapping_data(mapping_data, thread_lock):
     item_count = len(mapping_data)
     for item_index, item in enumerate(mapping_data):
-        add_item_from_mapping(item)
-        print(f"\t{item_index / item_count * 100:.0f}%", end="\r")
+        with thread_lock:
+            add_item_from_mapping(item)
+            print(f"\t{item_index / item_count * 100:.0f}%", end="\r")
     print("")
 
 def get_item(item_id=None, expire_data=True):

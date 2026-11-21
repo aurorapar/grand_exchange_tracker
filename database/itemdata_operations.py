@@ -146,3 +146,13 @@ def add_item_history(item, item_history):
         traceback.print_exc()
         print(f"Failed to add item history to database:\n\t{item.id}:{item.name}")
 
+def add_new_itemdatas(itemdatas):
+    try:
+        with Session(engine) as session:
+            for itemdata in itemdatas:
+                session.merge(itemdata)
+            session.commit()
+    except Exception as e:
+        traceback.print_exc()
+        print(f"Failed to add item history to database:\n\t{itemdata.runescape_item_id}:{itemdata.timestamp}")
+

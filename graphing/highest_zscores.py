@@ -55,7 +55,7 @@ def calculate_zscore(data):
         return
 
     number_of_last_points = min(len(item_data), threshold_sample_points) * -1
-    threshold_points = [data_point for data_point in item_data[:number_of_last_points]]
+    threshold_points = [data_point for data_point in item_data] # [:number_of_last_points]]
     newest_prices = [d.price or 0 for d in threshold_points]
     newest_volumes = [d.volume or 0 for d in threshold_points]
     if newest_volumes and newest_volumes:
