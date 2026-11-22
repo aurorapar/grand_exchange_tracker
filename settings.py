@@ -31,3 +31,6 @@ API_REFRESH = datetime.timedelta(hours=12)
 # number of days to consider for all data
 # current_date - LOOKBACK_DAYS
 LOOKBACK_DAYS = 14
+
+# splits vertical time lines of x-axis
+DATESPLIT_TIME_DELTA = datetime.timedelta(hours=8)

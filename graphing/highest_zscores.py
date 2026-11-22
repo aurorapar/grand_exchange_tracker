@@ -51,28 +51,25 @@ def calculate_zscore(data):
     print(f"\t{time.ctime()} {item_progress.value / item_total * 100 : .0f}%", end="\r")
 
     if not item_data:
-        results[item_id] = None
+        results[item_id] = 0
         return
 
-    number_of_last_points = min(len(item_data), threshold_sample_points) * -1
-    threshold_points = [data_point for data_point in item_data] # [:number_of_last_points]]
-    newest_prices = [d.price or 0 for d in threshold_points]
-    newest_volumes = [d.volume or 0 for d in threshold_points]
-    if newest_volumes and newest_volumes:
-        average_price = statistics.mean(newest_prices)
-        average_volume = statistics.mean(newest_volumes)
-
-        for threshold_check in threshold_functions:
-            if threshold_check(average_price, average_volume):
-                results[item_id] = None
-                return
-
-    prices = [data_point.price for data_point in item_data]
-    if len(prices) < 2:
-        results[item_id] = None
+    item_data = [data_point for data_point in item_data if data_point.price and data_point.volume] # [:number_of_last_points]]
+    item_data.sort(key=lambda x: x.timestamp)
+    if not item_data or len(item_data) < 2:
+        results[item_id] = 0
         return
-    max_timestamp = max(data_point.timestamp for data_point in item_data)
-    newest_point = [data_point for data_point in item_data if data_point.timestamp == max_timestamp][0]
+    prices = [d.price for d in item_data]
+    volumes = [d.volume for d in item_data]
+    average_price = statistics.mean(prices)
+    average_volume = statistics.mean(volumes)
+
+    for threshold_check in threshold_functions:
+        if threshold_check(average_price, average_volume):
+            results[item_id] = 0
+            return
+
+    newest_point = item_data[-1]
 
     s = statistics.stdev(prices)
     if s == 0:
