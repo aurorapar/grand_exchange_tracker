@@ -8,16 +8,20 @@ from graphing.highest_volumes import main as get_highest_volumes
 from graphing.graph_zscore_items import main as graph_zscore_items
 from graphing.graph_volume_items import main as graph_volume_items
 
-from settings import LOOKBACK_DAYS
+from settings import LOOKBACK_RANGE
 
 LOCK = threading.Lock()
 
 def main():
-    lookback_date_cutoff = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=LOOKBACK_DAYS)
-
+    lookback_date_cutoff = datetime.datetime.now(tz=datetime.UTC) - LOOKBACK_RANGE
+    lookback_date_cutoff = lookback_date_cutoff.replace(tzinfo=datetime.UTC)
     # volumes = get_highest_volumes(lookback_date_cutoff)
 
     zscores = get_highest_zscores(lookback_date_cutoff)
+    if not zscores:
+        print(f"No zscores available (lookback time too recent? {lookback_date_cutoff})")
+        exit()
+    # print(zscores)
     # input(zscores)
     # zscores = [(30066, 3.9659907955569667), (25454, 4.052224174983592), (23953, 4.154987422326744), (12484, 4.198585973713432), (9338, 4.341873031380608), (28313, 4.527244870157542), (30848, 7.211750536062137), (10145, 9.592217590206781)]
 

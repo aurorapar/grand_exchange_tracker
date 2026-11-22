@@ -43,7 +43,7 @@ def main(zscore_items, lookback_date_cutoff):
     graph_data = graph_data[::-1]
     item_names = [x[0] for x in graph_data]
     graph_data = [x[1] for x in graph_data]
-    graph_items(f"{NUMBER_OF_ITEMS_TO_GRAPH} Items With Highest Z-Scores\nSince {datetime.datetime.utcnow() - datetime.timedelta(days=LOOKBACK_DAYS)}",
+    graph_items(f"{NUMBER_OF_ITEMS_TO_GRAPH} Items With Highest Z-Scores\nSince {datetime.datetime.utcnow() - LOOKBACK_RANGE}",
                 item_names, "Date", ["Price", "Volume"], graph_data)
 
 

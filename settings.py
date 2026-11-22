@@ -5,7 +5,7 @@ from constants import *
 THREAD_COUNT = 10
 
 # graph this number of items
-NUMBER_OF_ITEMS_TO_GRAPH = 1
+NUMBER_OF_ITEMS_TO_GRAPH = 5
 
 BACKGROUND_COLOR = BLACK
 # first line color is price,
@@ -30,14 +30,14 @@ THRESHOLDS = [
 ]
 
 # Skip updating items if API data is younger than this value
-API_REFRESH = datetime.timedelta(hours=12)
+API_REFRESH = datetime.timedelta(days=12)
 
 # number of days to consider for all data
 # current_date - LOOKBACK_DAYS
-LOOKBACK_DAYS = 30
+LOOKBACK_RANGE = datetime.timedelta(days=14)
 
 # splits vertical time lines of x-axis
-DATESPLIT_TIME_DELTA = datetime.timedelta(days=1)
+DATESPLIT_TIME_DELTA = datetime.timedelta(hours=24)
 
 # fourier bullshit
 FOURIER_ORDER = 10

@@ -56,7 +56,8 @@ def graph_items(
                 date_ranges = draw_timedeltas(a.twinx(), x_values,max(y_values))
 
                 # h, = plot_fourier_bullshit(a, MAGNITUDE_COLOR, x_values, y_values, date_ranges)
-                h, = plot_moving_average(a, MOVING_AVG_COLOR, x_values, y_values, date_ranges)
+                # h, = plot_moving_average(a, MOVING_AVG_COLOR, x_values, y_values, date_ranges)
+                h, = plot_moving_zscore(a.twinx(), MOVING_AVG_COLOR, x_values, y_values, date_ranges)
                 handles.append(h)
 
                 annotate_values(a, LINE_COLORS[ai], x_values, y_values, date_ranges)
@@ -166,6 +167,32 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     y = lfilter(b, a, lfilter(b, a, data))
     return y
+
+def plot_moving_zscore(axis, color, x_values, y_values, date_ranges):
+    xs = []
+    ys = []
+    for t_index, timestamp in  enumerate(x_values):
+        if t_index < 1 or not y_values[t_index]:
+            continue
+        sub_ys = [y for y in y_values[:t_index + 1] if y]
+        s = statistics.stdev(sub_ys)
+        if s == 0:
+            ys.append(0)
+            return
+
+        m = statistics.mean(sub_ys)
+        zscore = (sub_ys[-1] - m) / s
+        ys.append(zscore)
+        xs.append(timestamp)
+    annotate_values(axis, color, xs, ys, date_ranges)
+    return axis.plot(xs, ys,
+              marker='.',
+              markersize=GRAPH_LINE_SIZE,
+              linestyle='solid',
+              linewidth=GRAPH_LINE_SIZE,
+              color=color,
+              label="Moving Z-Score"
+              )
 
 
 
