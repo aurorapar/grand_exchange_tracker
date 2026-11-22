@@ -11,7 +11,6 @@ def main(lookback_date_cutoff):
     return find_highest_zscores_items(lookback_date_cutoff)
 
 threshold_functions = THRESHOLDS
-threshold_sample_points = THRESHOLD_SAMPLE_POINTS
 
 def find_highest_zscores_items(lookback_date_cutoff):
     all_items = get_item(expire_data=False)
@@ -22,6 +21,10 @@ def find_highest_zscores_items(lookback_date_cutoff):
         with multiprocessing.Pool(THREAD_COUNT) as pool:
             results = manager.dict()
             item_progress = manager.Value('i', 0)
+
+            # test 1 item
+            # calculate_zscore([results, lookback_date_cutoff, all_items[0].id, item_progress, item_total])
+            # test all items
             pool.map(calculate_zscore, [(results, lookback_date_cutoff, item.id, item_progress, item_total) for item in all_items])
 
             for item_id, zscore in results.items():
@@ -54,13 +57,16 @@ def calculate_zscore(data):
         results[item_id] = 0
         return
 
-    item_data = [data_point for data_point in item_data if data_point.price and data_point.volume] # [:number_of_last_points]]
+    item_data = [data_point for data_point in item_data
+                 if (data_point.price or data_point.average_high)
+                 and (data_point.volume or data_point.high_price_volume)
+    ]
     item_data.sort(key=lambda x: x.timestamp)
     if not item_data or len(item_data) < 2:
         results[item_id] = 0
         return
-    prices = [d.price for d in item_data]
-    volumes = [d.volume for d in item_data]
+    prices = [d.price or d.average_high for d in item_data]
+    volumes = [d.volume or d.high_price_volume for d in item_data]
     average_price = statistics.mean(prices)
     average_volume = statistics.mean(volumes)
 
@@ -77,7 +83,7 @@ def calculate_zscore(data):
         return
 
     m = statistics.mean(prices)
-    zscore = (newest_point.price - m) / s
+    zscore = ((newest_point.price or newest_point.average_high) - m) / s
 
     results[item_id] = zscore
 

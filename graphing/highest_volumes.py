@@ -11,7 +11,6 @@ def main(lookback_date_cutoff):
     return find_highest_volume_items(lookback_date_cutoff)
 
 threshold_functions = THRESHOLDS
-threshold_sample_points = THRESHOLD_SAMPLE_POINTS
 
 def find_highest_volume_items(lookback_date_cutoff):
     all_items = get_item(expire_data=False)

@@ -1,6 +1,8 @@
 import math
 import statistics
 
+from scipy.signal import butter, lfilter, freqz
+
 import matplotlib.pyplot as plt
 
 from settings import *
@@ -25,10 +27,9 @@ def graph_items(
     fig = plt.figure(layout="constrained")
     fig.set_facecolor(BACKGROUND_COLOR)
     fig.set_edgecolor(FEATURE_COLOR)
-
+    handles = []
     for items_index, item_data in enumerate(items_to_graph):
         axis = fig.add_subplot(row_count, col_count, items_index+1)
-
         item_name = item_names[items_index]
         fig.canvas.manager.set_window_title(item_name)
 
@@ -39,57 +40,133 @@ def graph_items(
         for ai, a in enumerate([axis, axis.twinx()]):
             y_values = [y[ai] for y in item_data[2]]
             y_labels = [y[ai] for y in item_data[3]]
-            a.plot(x_values, y_values,
+
+            handle, = a.plot(x_values, y_values,
                       marker='.',
                       markersize=GRAPH_LINE_SIZE,
                       linestyle='solid',
                       linewidth=GRAPH_LINE_SIZE,
-                      color=LINE_COLORS[ai]
-                      )
-            a.set_ylabel(y_label[ai], color=LINE_COLORS[ai])
+                      color=LINE_COLORS[ai],
+                      label=y_label[ai]
+            )
+            handles.append(handle)
+
+            if ai == 0:
+                # prices axes
+                date_ranges = draw_timedeltas(a.twinx(), x_values,max(y_values))
+
+                # h, = plot_fourier_bullshit(a, MAGNITUDE_COLOR, x_values, y_values, date_ranges)
+                h, = plot_moving_average(a, MOVING_AVG_COLOR, x_values, y_values, date_ranges)
+                handles.append(h)
+
+                annotate_values(a, LINE_COLORS[ai], x_values, y_values, date_ranges)
+            else:
+                # volumes axes
+                # h, = plot_fourier_bullshit(a, MAGNITUDE_COLOR, x_values, y_values, date_ranges)
+                # h, = plot_moving_average(a.twinx(), MOVING_AVG_COLOR, x_values, y_values, date_ranges)
+                # handles.append(h)
+                # annotate_values(a, LINE_COLORS[ai], x_values, y_values, date_ranges)
+                pass
+
             a.locator_params(axis="y", nbins=5)
             plt.setp(a.get_yticklabels(), color=LINE_COLORS[ai])
 
-
-            highest = [(x, y_values[xi]) for xi, x in enumerate(x_values) if x and y_values[xi]]
-            highest = sorted(highest, key=lambda x: x[1])[-1]
-
-            a.set_xlabel(x_label, color=FEATURE_COLOR)
             a.get_xaxis().set_visible(False)
-            # a.set_xticks(x_values, x_labels, color=FEATURE_COLOR)
-            # plt.setp(a.get_xticklabels(), rotation=30, horizontalalignment='right', color=FEATURE_COLOR)
-            # a.locator_params(axis="x", nbins=10)
 
             a.set_facecolor(BACKGROUND_COLOR)
             for spine in a.spines.values():
                 spine.set_edgecolor(FEATURE_COLOR)
 
-            start_date = x_values[0]
-            line_values = [(x_values[yi], y) for yi, y in enumerate(y_values) if y and x_values[yi]]
-            y_min = min(x[1] for x in line_values)
-            y_max = max(x[1] for x in line_values)
-            current_date = line_values[0][0]
-            while current_date < line_values[-1][0]:
-                next_date = current_date + DATESPLIT_TIME_DELTA
 
-                day_string = current_date.strftime("%Y-%m-%d %H:%M")
-                if ai == 0:
-                    a.vlines(current_date, y_min, y_max, FEATURE_COLOR, linestyle="dotted")
-                    a.annotate(day_string, xy=(current_date, y_min), xycoords='data',
-                               xytext=(.5, .5), textcoords='offset points', color=FEATURE_COLOR, rotation=90)
 
-                day_y_values = [y for yi, y in enumerate(line_values) if current_date <= y[0] < next_date]
-                if not day_y_values:
-                    current_date = next_date
-                    continue
-                day_y_values = sorted(day_y_values, key=lambda x: x[1])
-                min_point = day_y_values[0]
-                max_point = day_y_values[-1]
-                for point in [min_point, max_point]:
-                    point_string = f"{point[1]}  {point[0].strftime("@%H:%M")}"
-                    a.annotate(point_string, xy=(point[0], point[1]), xycoords='data', rotation=50,
-                               xytext=(1.5, 1.5), textcoords='offset points', color=LINE_COLORS[ai])
-                    a.plot(point[0], point[1], 'o', color=LINE_COLORS[ai])
-                current_date = next_date
-
+    legend = plt.legend(handles=handles,
+                        shadow=True, fontsize='x-large',
+                        labelcolor=FEATURE_COLOR,
+                        facecolor=BACKGROUND_COLOR,
+                        edgecolor=FEATURE_COLOR,
+    )
+    print("Sending...")
     plt.show()
+
+def draw_timedeltas(axis, x_values, y_max, timedelta=DATESPLIT_TIME_DELTA):
+    date_ranges = []
+    start_date = x_values[0]
+    current_date = start_date
+    while current_date < x_values[-1]:
+        next_date = current_date + timedelta
+        date_ranges.append([current_date, next_date])
+        day_string = current_date.strftime("%Y-%m-%d %H:%M")
+
+        axis.vlines(current_date, 0, y_max, FEATURE_COLOR, linestyle="dotted")
+        axis.annotate(day_string, xy=(current_date, 0), xycoords='data',
+                   xytext=(.5, .5), textcoords='offset points', color=FEATURE_COLOR, rotation=90)
+        current_date += timedelta
+    return date_ranges
+
+
+def annotate_values(axis, color, x_values, y_values, date_ranges):
+    for date_range in date_ranges:
+        min_date = date_range[0].replace(tzinfo=datetime.UTC)
+        max_date = date_range[1].replace(tzinfo=datetime.UTC)
+        values = [(x_values[yi], y) for yi, y in enumerate(y_values) if y and x_values[yi] and
+              min_date <= x_values[yi].replace(tzinfo=datetime.UTC) < max_date ]
+        if not values:
+            continue
+        values = sorted(values, key=lambda x: x[1])
+        for point in [values[0], values[-1]]:
+            point_string = f"{point[1]}  {point[0].strftime("@%H:%M")}"
+            axis.annotate(point_string, xy=(point[0], point[1]), xycoords='data', rotation=50,
+                       xytext=(1.5, 1.5), textcoords='offset points', color=color)
+            axis.plot(point[0], point[1], 'o', color=color)
+
+def plot_moving_average(axis, color, x_values, y_values, date_ranges, timedelta=MOVING_AVERAGE_TIME_DELTA):
+    xs = []
+    ys = []
+    pairs = list(zip(x_values, y_values))
+    pairs = [p for p in pairs if p[0] and p[1]]
+    for t_index, timestamp in  enumerate(x_values):
+        low_val = timestamp.replace(tzinfo=datetime.UTC) - timedelta
+        if low_val < x_values[0].replace(tzinfo=datetime.UTC):
+            continue
+
+        sub_vals = sorted([p for p in pairs if low_val < p[0].replace(tzinfo=datetime.UTC) <= timestamp.replace(tzinfo=datetime.UTC)], key=lambda x: x[0].replace(tzinfo=datetime.UTC))
+        xs.append(sub_vals[-1][0])
+        ys.append(int(statistics.mean(x[1] for x in sub_vals)))
+    annotate_values(axis, color, xs, ys, date_ranges)
+    return axis.plot(xs, ys,
+              marker='.',
+              markersize=GRAPH_LINE_SIZE,
+              linestyle='solid',
+              linewidth=GRAPH_LINE_SIZE,
+              color=color,
+              label="Moving Price Avg"
+              )
+
+def plot_fourier_bullshit(axis, color, x_values, y_values, date_ranges):
+    lowpass_y_values = list(map(int, butter_lowpass_filter(y_values, CUTOFF, SAMPLE_RATE, FOURIER_ORDER)))
+    # pairs = list(zip(x_values, y_values, lowpass_y_values))
+    # for p in pairs:
+    #     output = [x for x in p]
+    #     output.append(f"{p[1] / p[2] * 100:.0f}")
+    #     print(output)
+    annotate_values(axis.twinx(), color, x_values, lowpass_y_values, date_ranges)
+    return axis.plot(x_values, lowpass_y_values,
+         marker='.',
+         markersize=GRAPH_LINE_SIZE,
+         linestyle='solid',
+         linewidth=GRAPH_LINE_SIZE,
+         color=color,
+         label="LPF (Price)"
+    )
+
+def butter_lowpass(cutoff, fs, order=5):
+    return butter(order, cutoff, fs=fs, btype='low', analog=False)
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, lfilter(b, a, data))
+    return y
+
+
+
+

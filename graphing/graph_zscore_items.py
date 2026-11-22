@@ -26,10 +26,15 @@ def main(zscore_items, lookback_date_cutoff):
             print(data_for_item)
             continue
 
-        x_values = [d.timestamp for d in data_for_item]
+        values = [d for d in data_for_item
+                    if (d.price or d.average_high)
+                    and (d.volume or d.high_price_volume)
+        ]
+
+        x_values = [d.timestamp for d in values]
         x_labels = [datetime.datetime.strftime(d, "%Y%m%d") for d in x_values]
 
-        y_values = [(d.price, d.volume) for d in data_for_item]
+        y_values = [(d.price or d.average_high, d.volume or d.high_price_volume) for d in values]
         y_labels = y_values
 
         graph_data.append([f"{item_name}    Z:{zscore:.2f}", [x_values, x_labels, y_values, y_labels]])

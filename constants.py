@@ -18,8 +18,6 @@ BACKUP_DATA_STORE_FILE = os.path.join(os.path.dirname(__file__), BACKUP_DATA_STO
 DATABASE_FILE = "database/database.sqlite"
 DATABASE_FILE = os.path.join(os.path.dirname(__file__), DATABASE_FILE)
 
-DISPLAY_FILE = os.path.join(os.path.dirname(__file__), "display.py")
-
 PRICES = "prices"
 LAST_UPDATE = "%LAST_UPDATE%"
 LAST_UPDATE2 = "%LAST_UPDATE_F%"
@@ -27,8 +25,10 @@ IGNORE_KEYS = [LAST_UPDATE, LAST_UPDATE2]
 
 PINK = (1,0,150/255)
 BLACK = (0,0,0)
+DARK_GRAY = (.05, .05, .05)
 BLUE = (26/255, 133/255, 1)
 YELLOW = (1,1,0)
+ORANGE = (.66, .2, 0)
 
 DATA = "data"
 ITEM_NAME = "name"
